@@ -1,0 +1,76 @@
+/* vassbo-mot-1-frontend/src/pages/Game.css */
+
+.game-container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.game-container h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.question-section {
+    margin-bottom: 1.5rem;
+}
+
+.question-section h3 {
+    margin-bottom: 0.5rem;
+}
+
+.question-section p {
+    margin-bottom: 1rem;
+}
+
+.slider-input {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.slider-input input[type="range"] {
+    flex: 1;
+}
+
+button {
+    padding: 0.75rem 1.5rem;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: red;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.participants-section {
+    margin-top: 1.5rem;
+}
+
+.participants-section h3 {
+    margin-bottom: 0.5rem;
+}
+
+.participants-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.participants-section li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #ccc;
+}
