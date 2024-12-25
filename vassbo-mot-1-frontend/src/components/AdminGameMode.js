@@ -61,7 +61,6 @@ const AdminGameMode = ({gameCode}) => {
 
 	return (
 		<div className="admin-game-mode">
-			<h3>Admin Game Mode</h3>
 
 			{/* Start Runde Knapp */}
 			{currentGame.status === 'in-progress' && !currentGame.roundActive && (
@@ -69,18 +68,6 @@ const AdminGameMode = ({gameCode}) => {
 			)}
 
 			{/* Sett Riktig Svar */}
-			{!currentGame.roundActive && currentGame.currentQuestionIndex < currentGame.questions.length && (
-				<div className="set-correct-answer">
-					<h4>Sett Riktig Svar</h4>
-					<input
-						type="number"
-						placeholder="Riktig Svar"
-						value={correctAnswer}
-						onChange={(e) => setCorrectAnswerInput(e.target.value)}
-					/>
-					<button onClick={handleSetCorrectAnswer}>Sett Svar</button>
-				</div>
-			)}
 
 			{/* Feilmeldinger og suksessmeldinger */}
 			{error && <p className="error-message">{error}</p>}

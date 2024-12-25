@@ -1,4 +1,4 @@
-// vassbo-mot-1-frontend/src/pages/Game.js
+// vassbo-mot-1-frontend/src/pages/GameFront.js
 
 import React, {useContext, useState, useEffect} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
@@ -6,7 +6,7 @@ import {GameContext} from '../context/GameContext';
 import PlayerGameView from '../components/PlayerGameView';
 import './Game.css'; // Valgfritt: For styling
 
-const Game = () => {
+const GameFront = () => {
 	const {gameCode} = useParams();
 	const {games, joinGame} = useContext(GameContext);
 	const navigate = useNavigate();
@@ -68,4 +68,4 @@ const Game = () => {
 	);
 };
 
-export default Game;
+export default GameFront;

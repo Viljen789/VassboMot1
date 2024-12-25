@@ -1,15 +1,16 @@
-// vassbo-mot-1-backend/models/game.js
-
 class Game {
 	constructor(title, gameCode) {
 		this.title = title;
 		this.gameCode = gameCode;
+		console.log(`Game created with gameCode: ${this.gameCode}`);
 		this.players = [];
 		this.questions = [];
 		this.currentQuestionIndex = 0;
 		this.status = 'created'; // status kan være 'created', 'started', 'ended'
 		this.roundActive = false;
 		this.correctAnswer = null;
+		this.roundStartedAt = null; // Initialize to null
+		this.guesses = {}; // Initialiser guesses
 	}
 
 	addPlayer(playerName) {
@@ -17,20 +18,23 @@ class Game {
 			throw new Error('Spillernavn er allerede tatt.');
 		}
 		this.players.push({name: playerName, score: 0});
+		console.log(`Spiller ${playerName} lagt til i spill ${this.gameCode}`);
 	}
 
 	addQuestion(question) {
 		this.questions.push(question);
+		console.log(`Spørsmål lagt til i spill ${this.gameCode}: ${question.text}`);
 	}
 
-	startGame() {
-		if (this.status !== 'created') {
-			throw new Error('Spillet kan kun startes fra status "created".');
-		}
-		if (this.players.length < 2) {
-			throw new Error('Minimum 2 spillere kreves for å starte spillet.');
+	startGame(io) {
+		// Nytt krav: det må være mer enn 0 spillere
+		if (this.players.length < 1) {
+			throw new Error('Det kreves minst én spiller for å starte spillet.');
 		}
 		this.status = 'started';
+		console.log(`Emitting updateGame to gameCode: ${this.gameCode}`);
+		console.log('io inside startGame:', io);
+		io.to(this.gameCode).emit('updateGame', this);
 	}
 
 	startRound(io) {
@@ -42,11 +46,26 @@ class Game {
 		}
 		this.roundActive = true;
 		this.correctAnswer = null;
-		io.to(this.gameCode).emit('startRound', {
-			question: this.questions[this.currentQuestionIndex].text,
-			useSlider: this.questions[this.currentQuestionIndex].useSlider,
-			range: this.questions[this.currentQuestionIndex].range,
+		this.roundStartedAt = Date.now(); // Sett starttidspunkt
+
+		console.log(`Runde startet for spill ${this.gameCode}:`, {
+			roundActive: this.roundActive,
+			roundStartedAt: this.roundStartedAt,
 		});
+
+		io.to(this.gameCode).emit('updateGame', this);
+
+		setTimeout(() => {
+			if (this.roundActive) {
+				this.roundActive = false;
+				console.log(`Runde avsluttet automatisk for spill ${this.gameCode}`);
+				io.to(this.gameCode).emit('roundEnded', {
+					gameCode: this.gameCode,
+					correctAnswer: null,
+					leaderboard: this.getLeaderboard(),
+				});
+			}
+		}, 30000);
 	}
 
 	setCorrectAnswer(correctAnswer, io) {
@@ -56,25 +75,24 @@ class Game {
 		this.correctAnswer = correctAnswer;
 		this.roundActive = false;
 
-		// Beregn poeng basert på svarene
+		console.log(`Riktig svar satt for spill ${this.gameCode}: ${correctAnswer}`);
+
 		this.players.forEach(player => {
 			const guess = this.guesses[player.name];
 			if (guess !== undefined) {
 				const distance = Math.abs(guess - correctAnswer);
-				// Poengberegning: jo nærmere, jo flere poeng
-				player.score += Math.max(10 - distance, 0); // Eksempel: maks 10 poeng, min 0
+				player.score += Math.max(10 - distance, 0);
+				console.log(`Spiller ${player.name} gjetning: ${guess}, poeng: ${player.score}`);
 			}
 		});
 
-		// Emit til alle spillere at fasiten er satt og oppdatert leaderboard
 		io.to(this.gameCode).emit('roundEnded', {
 			correctAnswer,
-			leaderboard: this.players.sort((a, b) => b.score - a.score),
+			leaderboard: this.getLeaderboard(),
 		});
 
-		// Forbered for neste spørsmål
 		this.currentQuestionIndex += 1;
-		this.guesses = {}; // Resett gjetninger for neste runde
+		this.guesses = {};
 	}
 
 	submitGuess(playerName, guess, io) {
@@ -87,8 +105,14 @@ class Game {
 		}
 		this.guesses[playerName] = guess;
 
-		// Emit til spilleren at deres gjetning er mottatt
 		io.to(this.gameCode).emit('playerGuessed', {playerName, guess});
+		console.log(`Spiller ${playerName} sendte inn gjetning ${guess} i spill ${this.gameCode}`);
+	}
+
+	getLeaderboard() {
+		const leaderboard = [...this.players].sort((a, b) => b.score - a.score);
+		console.log(`Leaderboard for spill ${this.gameCode}:`, leaderboard);
+		return leaderboard;
 	}
 }
 

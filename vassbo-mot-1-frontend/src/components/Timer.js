@@ -1,9 +1,13 @@
-// vassbo-mot-1-frontend/src/components/Timer.js
-
+// src/components/Timer.js
 import React, {useEffect, useState} from 'react';
 
-const Timer = ({initialTime, onTimeUp}) => {
-	const [timeLeft, setTimeLeft] = useState(initialTime);
+const Timer = ({deadline, onTimeUp}) => {
+	const calculateTimeLeft = () => {
+		const difference = deadline - Date.now();
+		return difference > 0 ? Math.round(difference / 1000) : 0;
+	};
+
+	const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
 	useEffect(() => {
 		if (timeLeft <= 0) {
@@ -12,18 +16,18 @@ const Timer = ({initialTime, onTimeUp}) => {
 		}
 
 		const timer = setInterval(() => {
-			setTimeLeft((prev) => {
-				if (prev <= 1) {
-					clearInterval(timer);
-					onTimeUp();
-					return 0;
-				}
-				return prev - 1;
-			});
+			const newTimeLeft = calculateTimeLeft();
+			setTimeLeft(newTimeLeft);
+
+			if (newTimeLeft <= 0) {
+				clearInterval(timer);
+				onTimeUp();
+			}
 		}, 1000);
 
+		// Rydd opp interval om komponenten unmountes
 		return () => clearInterval(timer);
-	}, [timeLeft, onTimeUp]);
+	}, [deadline, onTimeUp, timeLeft]);
 
 	return (
 		<div className="timer">

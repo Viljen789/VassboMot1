@@ -1,32 +1,21 @@
-// src/pages/Leaderboard.js
-import React, {useContext} from 'react';
-import {useParams} from 'react-router-dom';
-import {GameContext} from '../context/GameContext';
+// src/components/Leaderboard.js
+import React from 'react';
 
-const Leaderboard = () => {
-	const {gameCode} = useParams();
-	const {games} = useContext(GameContext);
-	const game = games[gameCode];
-
-	if (!game) {
-		return <div>Spillet finnes ikke.</div>;
+const Leaderboard = ({game}) => {
+	if (!game || !game.leaderboard) {
+		return <p>Ingen leaderboard tilgjengelig.</p>;
 	}
 
-	// Sort players by score descending
-	const sortedPlayers = [...game.players].sort((a, b) => b.score - a.score);
-
 	return (
-		<div>
-			<h1>Leaderboard for Spillkode: {gameCode}</h1>
-			<h2>Tittel: {game.title}</h2>
+		<div className="leaderboard">
+			<h3>Leaderboard</h3>
 			<ul>
-				{sortedPlayers.map((player, index) => (
+				{game.leaderboard.map((player, index) => (
 					<li key={index}>
-						{index + 1}. {player.name} - Poeng: {player.score}
+						{player.name}: {player.score} poeng
 					</li>
 				))}
 			</ul>
-			<button onClick={() => window.location.href = '/'}>Tilbake til Hjem</button>
 		</div>
 	);
 };
