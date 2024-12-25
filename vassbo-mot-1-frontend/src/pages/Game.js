@@ -3,116 +3,67 @@
 import React, {useContext, useState, useEffect} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import {GameContext} from '../context/GameContext';
+import PlayerGameView from '../components/PlayerGameView';
 import './Game.css'; // Valgfritt: For styling
 
 const Game = () => {
 	const {gameCode} = useParams();
-	const {games, submitGuess} = useContext(GameContext);
+	const {games, joinGame} = useContext(GameContext);
 	const navigate = useNavigate();
-	const [currentQuestion, setCurrentQuestion] = useState(null);
-	const [guess, setGuess] = useState('');
-	const [submitted, setSubmitted] = useState(false);
+	const [playerName, setPlayerName] = useState('');
+	const [joined, setJoined] = useState(false);
 	const [error, setError] = useState('');
 
-	// Hent spillernavnet fra localStorage
-	const playerName = localStorage.getItem('playerName') || 'Spiller1'; // Standardverdi hvis ikke satt
-
-	const game = games[gameCode];
-
+	// Hent spillernavnet fra localStorage hvis tilgjengelig
 	useEffect(() => {
-		if (!game) {
-			setError('Spill ikke funnet.');
-			return;
+		const storedName = localStorage.getItem('playerName');
+		if (storedName) {
+			setPlayerName(storedName);
+			setJoined(true);
 		}
+	}, []);
 
-		if (game.status === 'ended') {
-			navigate(`/leaderboard/${gameCode}`);
-		}
-
-		if (game.status === 'in-progress' && game.questions.length > 0) {
-			const qIndex = game.currentQuestionIndex;
-			setCurrentQuestion(game.questions[qIndex]);
-		}
-	}, [game, gameCode, navigate]);
-
-	const handleSubmitGuess = async () => {
-		if (!guess.trim()) {
-			setError('Gjetning kan ikke være tom.');
+	const handleJoin = async () => {
+		if (!playerName.trim()) {
+			setError('Navn kan ikke være tomt.');
 			return;
 		}
 
 		try {
-			await submitGuess(gameCode, playerName, guess);
-			setSubmitted(true);
+			// Forsøk å bli med i spillet ved å bruke joinGame-funksjonen
+			await joinGame(gameCode, playerName);
 			setError('');
+			setJoined(true);
+			localStorage.setItem('playerName', playerName);
 		} catch (err) {
-			if (err.response && err.response.data && err.response.data.error) {
-				setError(err.response.data.error);
-			} else {
-				setError('Feil ved å sende inn gjetning.');
-			}
+			setError(err.response?.data?.error || 'Feil ved å bli med i spill.');
 		}
 	};
 
-	if (error) {
-		return <div className="game-container"><p className="error-message">{error}</p></div>;
-	}
+	const currentGame = games[gameCode];
 
-	if (!game) {
-		return <div className="game-container"><p>Laster...</p></div>;
-	}
-
-	if (game.status === 'created') {
-		return <div className="game-container"><p>Venter på at spillet skal starte...</p></div>;
-	}
-
-	if (game.status === 'in-progress' && !currentQuestion) {
-		return <div className="game-container"><p>Laster spørsmål...</p></div>;
+	if (!currentGame) {
+		return <div className="game-container"><p>Venter på at spillet skal starte.</p></div>;
 	}
 
 	return (
 		<div className="game-container">
-			<h2>{game.title}</h2>
-			<p><strong>Status:</strong> {game.status}</p>
-			{currentQuestion && (
-				<div className="question-section">
-					<h3>Spørsmål:</h3>
-					<p>{currentQuestion.text}</p>
-					{currentQuestion.useSlider && currentQuestion.range ? (
-						<div className="slider-input">
-							<input
-								type="range"
-								min={currentQuestion.range[0]}
-								max={currentQuestion.range[1]}
-								value={guess}
-								onChange={(e) => setGuess(e.target.value)}
-							/>
-							<span>{guess}</span>
-						</div>
-					) : (
-						<input
-							type="text"
-							placeholder="Skriv inn ditt svar"
-							value={guess}
-							onChange={(e) => setGuess(e.target.value)}
-						/>
-					)}
-					<button onClick={handleSubmitGuess} disabled={submitted}>
-						{submitted ? 'Gjetning sendt!' : 'Send Gjetning'}
-					</button>
+			<h2>Spill: {currentGame.title}</h2>
+
+			{!joined ? (
+				<div className="join-game">
+					<input
+						type="text"
+						placeholder="Ditt navn"
+						value={playerName}
+						onChange={(e) => setPlayerName(e.target.value)}
+					/>
+					<button onClick={handleJoin}>Bli Med</button>
 					{error && <p className="error-message">{error}</p>}
 				</div>
+			) : (
+				<PlayerGameView gameCode={gameCode} playerName={playerName}/>
 			)}
-
-			{/* Liste over deltakere */}
-			<div className="participants-section">
-				<h3>Deltakere</h3>
-				<ul>
-					{game.players.map((player, index) => (
-						<li key={index}>{player.name} - {player.score} poeng</li>
-					))}
-				</ul>
-			</div>
 		</div>
 	);
 };

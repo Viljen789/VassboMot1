@@ -1,4 +1,4 @@
-// src/components/PlayerGuess.js.js
+// src/components/AdminGameMode.js.js
 import React, {useState, useContext} from 'react';
 import {GameContext} from '../contexts/GameContext';
 

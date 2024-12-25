@@ -74,3 +74,78 @@ button:disabled {
     padding: 0.5rem 0;
     border-bottom: 1px solid #ccc;
 }
+
+/* Container for the slider */
+.slider-input {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+}
+
+/* Style for the range input */
+.slider-input input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.slider-input input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #4caf50;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s;
+}
+
+.slider-input input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #4caf50;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s;
+}
+
+.slider-input input[type="range"]:hover {
+    background: #ccc;
+}
+
+.slider-input input[type="range"]::-webkit-slider-thumb:hover {
+    background: #45a049;
+}
+
+.slider-input input[type="range"]::-moz-range-thumb:hover {
+    background: #45a049;
+}
+
+/* Value display above slider */
+.slider-input span {
+    display: block;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    top: -10px;
+}
