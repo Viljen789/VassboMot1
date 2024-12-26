@@ -39,10 +39,11 @@ const createGame = (req, res) => {
 	// Emit til alle tilkoblede klienter
 	req.app.get('io').emit('updateGame', newGame);
 };
-
+// Game Controller - joinGame
 const joinGame = (req, res) => {
+	// Log all operations
 	const {gameCode, playerName} = req.body;
-	console.log('Received join-game request:', {gameCode, playerName});
+	console.log('Join game request:', {gameCode, playerName}); // Debug input
 
 	const game = games[gameCode];
 	if (!game) {
@@ -51,25 +52,34 @@ const joinGame = (req, res) => {
 	}
 
 	try {
-		// Verify playerName is not duplicated in this game
-		const isDuplicateName = game.players.some((player) => player.name === playerName);
+		// Ensure no duplicate names
+		const isDuplicateName = game.players.some(
+			(player) => player.name.toLowerCase() === playerName.toLowerCase()
+		);
+
 		if (isDuplicateName) {
-			console.error(`Duplicate player name attempted: ${playerName}`);
-			return res.status(400).json({error: 'Spillernavn er allerede tatt.'});
+			console.error(`Duplicate player detected: ${playerName}`);
+			return res.status(400).json({error: 'Spillernavn er allerede tatt. Prøv et annet navn.'});
 		}
 
+		// Add player
 		game.addPlayer(playerName);
+
+		console.log('Player added successfully:', playerName); // Debug player is added
+		console.log('Current players in game:', game.players); // Verify player list
+
+		res.status(200).json({
+			message: 'Spiller lagt til.',
+			player: {name: playerName, score: 0}, // Send confirmation back to client
+		});
+
+		// Broadcast to all clients
+		req.app.get('io').emit('updateGame', game); // Debug emit
+		console.log(`Game state after adding player (${gameCode}):`, game);
 	} catch (err) {
 		console.error('Error adding player:', err.message);
-		return res.status(400).json({error: err.message});
+		return res.status(500).json({error: 'Uventet feil oppsto. Prøv igjen senere.'});
 	}
-
-	console.log('Player added:', playerName, 'to game:', gameCode);
-
-	res.json({message: 'Spiller lagt til.', player: {name: playerName, score: 0}});
-
-	// Emit updated game state to all clients
-	req.app.get('io').emit('updateGame', game);
 };
 
 const addQuestion = (req, res) => {
@@ -223,7 +233,6 @@ const updateQuestion = (req, res) => {
 		res.status(400).json({error: err.message});
 	}
 };
-
 module.exports = {
 	createGame,
 	joinGame,

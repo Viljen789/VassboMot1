@@ -9,19 +9,19 @@ const Game = () => {
 	const {gameCode} = useParams();
 	const {games, submitGuess} = useContext(GameContext);
 	const currentGame = games[gameCode];
-	const playerName = sessionStorage.getItem('playerName');
+	const playerName = sessionStorage.getItem('playerName')?.trim().toLowerCase();
 	console.log('playerName from sessionStorage:', playerName)// Retrieve unique player name for this session
 	const [guess, setGuess] = useState('');
 	const [error, setError] = useState('');
 	const [successMessage, setSuccessMessage] = useState('');
-	// Unique player name logic
-	if (!sessionStorage.getItem('playerName')) {
-		const uniquePlayerName = `Player_${Math.random().toString(36).substring(7)}`;
-		sessionStorage.setItem('playerName', uniquePlayerName);
-	}
-	const player = this.players.find((p) => p.name.toLowerCase() === playerName.toLowerCase());
+	<div>
+		<h2>Velkommen {playerName}</h2>
+		<h4>Venter på at spill skal starte...</h4>
+	</div>
+	const player = currentGame.players.find((p) => p.name.toLowerCase() === playerName);
+
 	if (!player) {
-		throw new Error('Spiller ikke funnet.');
+		return <p>Spiller ikke funnet i dette spillet. Vennligst start på nytt.</p>;
 	}
 	const handleSubmitGuess = async () => {
 		if (!guess.trim()) {
@@ -57,7 +57,7 @@ const Game = () => {
 
 	return (
 		<div className="game-container">
-			{/*<h4>Spiller {sessionStorage.getItem('playerName')}</h4>*/}
+			{<h4>{sessionStorage.getItem('playerName')}</h4>}{/**/}
 			<h2>Venter på spørsmål...</h2>
 
 			{currentGame.status === 'started' && currentGame.roundActive && currentQuestion && (

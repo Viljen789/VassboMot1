@@ -31,13 +31,25 @@ class Game {
 		});
 	}
 
-	addPlayer(playerName) {
-		if (this.players.find((p) => p.name === playerName)) {
-			throw new Error('Spillernavn er allerede tatt.');
+	// Add this log inside `addPlayer` in your Game model:
+	addPlayer(name) {
+		if (!name) {
+			throw new Error('Player name cannot be empty.');
 		}
-		this.players.push({name: playerName, score: 0});
-		console.log(`[${this.gameCode}] Added player:`, playerName);
-		console.log(`[${this.gameCode}] Players now:`, this.players); // Debug all players
+
+		const normalizedPlayerName = name.trim().toLowerCase();
+		const isDuplicate = this.players.some(
+			(player) => player.name.toLowerCase() === normalizedPlayerName
+		);
+
+		if (isDuplicate) {
+			console.log(`Duplicate player name: ${name}`);
+			throw new Error('Player name already exists.');
+		}
+
+		const player = {name, score: 0}; // Create the player
+		this.players.push(player); // Add to players list
+		console.log('Player successfully added:', player); // Verify that player is added
 	}
 
 	addQuestion(question) {
@@ -45,40 +57,11 @@ class Game {
 	}
 
 	startGame() {
-		if (this.status !== 'created') {
-			throw new Error('Spillet kan kun startes fra status "created".');
-		}
-		if (this.players.length < 2) {
-			console.error('Not enough players to start the game:', this.players);
-			throw new Error('Minimum 2 spillere kreves for å starte spillet.');
+		if (!this.isReadyToStart()) {
+			throw new Error('Spillet krever minst to spillere og ett spørsmål for å starte.');
 		}
 		console.log('Starting the game with players:', this.players);
 		this.status = 'started';
-	}
-
-	startGame(io) {
-		if (!this.isReadyToStart()) {
-			throw new Error('Spillet er ikke klart til å starte. Sjekk spillere og spørsmål.');
-		}
-
-		console.log('Attempting to start game:', this);
-
-		if (this.status !== 'created') {
-			throw new Error('Spillet kan kun startes fra status "created".');
-		}
-		if (this.players.length < 2) {
-			throw new Error('Minimum 2 spillere kreves for å starte spillet.');
-		}
-		if (this.questions.length < 1) {
-			throw new Error('Minimum 1 spørsmål kreves for å starte spillet.');
-		}
-
-		this.status = 'started';
-		const currentQuestion = this.questions[this.currentQuestionIndex];
-		io.to(this.gameCode).emit('startRound', {
-			question: currentQuestion.text,
-			range: currentQuestion.range,
-		});
 	}
 
 	isReadyToStart() {
@@ -144,7 +127,6 @@ class Game {
 		this.roundActive = true;
 		const currentQuestion = this.questions[this.currentQuestionIndex];
 
-		// Record round start time in server-side state
 		const roundStartedAt = Date.now();
 		this.roundStartedAt = roundStartedAt;
 

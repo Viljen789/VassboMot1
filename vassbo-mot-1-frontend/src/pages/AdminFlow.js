@@ -81,21 +81,11 @@ const AdminFlow = () => {
 	// 1) Admin presenterer spm -> klikk "Åpne gjetting"
 	const handleOpenGuessing = async () => {
 		try {
-			// Ensure the game is started before starting the round
-			if (currentGame.status !== 'started') {
-				console.log('Starting the game:', gameCode);
-				const response = await axios.post('/api/game/start', {gameCode});
-
-				console.log('Game start response:', response.data);
-			}
-
-			console.log('Starting round for game:', gameCode);
-			await startRound(gameCode);
-			setPhase(2);
-			startTimer(30); // Start countdown timer
+			await startRound(gameCode); // Calls frontend API method
+			setPhase(2); // Switch phase to guessing
+			startTimer(30); // 30 seconds countdown
 			setError('');
 		} catch (err) {
-			console.error('Error starting game or round:', err.response?.data || err);
 			setError(err.response?.data?.error || 'Feil ved start av runde.');
 		}
 	};

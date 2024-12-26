@@ -14,7 +14,8 @@ router.put('/api/games/:gameCode/questions/:index', (req, res) => {
 
 	const game = games[gameCode];
 	if (!game) {
-		return res.status(404).json({error: 'Game not found.'});
+		console.log('Game not found:', gameCode);
+		return res.status(404).json({error: 'Spill ikke funnet.'});
 	}
 
 	try {

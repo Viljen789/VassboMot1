@@ -11,6 +11,7 @@ export const GameContext = createContext();
 export const GameProvider = ({children}) => {
 	const [games, setGames] = useState({});
 
+
 	// Initialiser Socket.io klient
 	useEffect(() => {
 		const socket = io('http://localhost:3001'); // Backend URL
@@ -29,14 +30,13 @@ export const GameProvider = ({children}) => {
 		};
 	}, []);
 	useEffect(() => {
-		const socket = io("http://localhost:3000");
+		const socket = io("http://localhost:3001");
 
 		socket.on('gameEnded', ({leaderboard}) => {
 			console.log('Game ended - Final leaderboard:', leaderboard);
-			// Handle any other state updates relevant to the context here if needed
 		});
 
-		return () => socket.disconnect(); // Cleanup
+		return () => socket.disconnect(); // Cleanup on unmount
 	}, []);
 	// Definer funksjonene
 	const createGame = async (title) => {
@@ -49,41 +49,20 @@ export const GameProvider = ({children}) => {
 		}
 	};
 
-	const joinGame = (req, res) => {
-		const {gameCode, playerName} = req.body;
-		console.log('Received join-game request:', {gameCode, playerName});
-
-		const game = games[gameCode];
-		if (!game) {
-			console.log('Game not found:', gameCode);
-			return res.status(404).json({error: 'Spill ikke funnet.'});
-		}
-
-		let uniquePlayerName = playerName || `Player_${Math.random().toString(36).substring(7)}`;
-		let counter = 1;
-
-		// Ensure player name is unique
-		while (game.players.some((player) => player.name === uniquePlayerName)) {
-			uniquePlayerName = `${playerName || "Player"}_${counter}`;
-			counter++;
-		}
+	const joinGame = async (gameCode, playerName) => {
 
 		try {
-			game.addPlayer(uniquePlayerName);
-		} catch (err) {
-			console.error('Error adding player:', err);
-			return res.status(400).json({error: err.message});
+			const response = await axios.post('http://localhost:3001/join-game', {
+				gameCode,
+				playerName,
+			});
+			console.log('Response from backend joinGame:', response.data); // Debug the response
+			return response.data; // Return only the `data` property
+		} catch (error) {
+			console.error('Error in joinGame API call:', error.response || error.message || error);
+			throw error;
 		}
-
-		console.log('Player added:', uniquePlayerName, 'to game:', gameCode);
-
-		// Send back the unique player name assigned
-		res.json({message: 'Spiller lagt til.', player: {name: uniquePlayerName, score: 0}});
-
-		// Emit updated game state to all clients
-		req.app.get('io').emit('updateGame', game);
 	};
-
 	const addQuestion = async (gameCode, question) => {
 		try {
 			const response = await axios.post('http://localhost:3001/add-question', {gameCode, question});
@@ -116,28 +95,15 @@ export const GameProvider = ({children}) => {
 		}
 	};
 
-	const startRound = (req, res) => {
-		const {gameCode} = req.body;
-		console.log('Received start-round request for gameCode:', gameCode);
-
-		const game = games[gameCode];
-		if (!game) {
-			console.log('Game not found:', gameCode);
-			return res.status(404).json({error: 'Spill ikke funnet.'});
-		}
-
+	const startRound = async (gameCode) => {
 		try {
-			game.startRound(req.app.get('io')); // Sender `io` korrekt
-		} catch (err) {
-			console.log('Error starting round:', err.message);
-			return res.status(400).json({error: err.message});
+			const response = await axios.post('http://localhost:3001/start-round', {gameCode});
+			return response.data;
+		} catch (error) {
+			console.error('Error starting round:', error);
+			throw error;
 		}
-
-		console.log('Round started for gameCode:', gameCode);
-
-		res.json({message: 'Runde startet.', game});
 	};
-
 	const setCorrectAnswer = async (gameCode, correctAnswer) => {
 		try {
 			const response = await axios.post('http://localhost:3001/set-correct-answer', {gameCode, correctAnswer});
