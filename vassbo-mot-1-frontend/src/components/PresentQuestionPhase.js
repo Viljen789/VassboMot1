@@ -1,14 +1,11 @@
-// src/components/PresentQuestionPhase.js
 import React from 'react';
 
-const PresentQuestionPhase = ({currentQuestion, handleOpenGuessing, error, successMessage}) => {
+const PresentQuestionPhase = ({question, questionNumber, onOpenGuessing, questionRange}) => {
 	return (
 		<div>
-			<h3>Fase 1: Presentasjon av spørsmål</h3>
-			<p><strong>Spørsmål:</strong> {currentQuestion.text}</p>
-			<button onClick={handleOpenGuessing}>Åpne gjetting (30 sek)</button>
-			{error && <p className="error-message">{error}</p>}
-			{successMessage && <p className="success-message">{successMessage}</p>}
+			<h3>Spørsmål {questionNumber}:</h3> {/* Use questionNumber here */}
+			<p><strong>Spørsmål:</strong> {question} (fra {questionRange[0]} til {questionRange[1]})</p>
+			<button onClick={onOpenGuessing}>Åpne gjetting (30 sek)</button>
 		</div>
 	);
 };

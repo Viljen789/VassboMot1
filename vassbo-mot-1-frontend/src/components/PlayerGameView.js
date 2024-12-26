@@ -2,6 +2,7 @@
 import React, {useContext, useState, useEffect} from 'react';
 import {GameContext} from '../context/GameContext';
 import Timer from './Timer'; // Importer Timer-komponenten
+import {io} from 'socket.io-client';
 
 const PlayerGameView = ({gameCode, playerName}) => {
 	const {games, submitGuess} = useContext(GameContext);
@@ -13,7 +14,19 @@ const PlayerGameView = ({gameCode, playerName}) => {
 	const [phase, setPhase] = useState(0); // Lokal fase-state
 
 	const currentGame = games[gameCode];
+	useEffect(() => {
+		if (!currentGame?.roundStartedAt) return;
 
+		const deadline = currentGame.roundStartedAt + 30000; // 30 seconds
+		setDeadline(deadline);
+	}, [currentGame?.roundStartedAt]);
+
+	useEffect(() => {
+		const socket = io("http://localhost:3000");
+		socket.on('updatePhase', ({phase}) => setPhase(phase));
+
+		return () => socket.disconnect();
+	}, []);
 	// Logging for feilsøking
 	useEffect(() => {
 		console.log('PlayerGameView - currentGame:', currentGame);

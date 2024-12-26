@@ -1,11 +1,12 @@
 // src/App.js
+
 import React from 'react';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import Register from './pages/Register';
 import Admin from './pages/Admin';
 import GameFront from './pages/GameFront';
-import AdminFlow from './pages/AdminFlow';  // ny side
-import Home from "./pages/Home";  // Sørg for at Home ligger i src/pages/Home.js
+import AdminFlow from './pages/AdminFlow';
+import Home from "./pages/Home";
 
 function App() {
 	return (
@@ -16,6 +17,7 @@ function App() {
 				<Route path="/register" element={<Register/>}/>
 				<Route path="/admin/flow/:gameCode" element={<AdminFlow/>}/>
 				<Route path="/game/:gameCode" element={<GameFront/>}/>
+				<Route path="/game" element={<GameFront/>}/>
 			</Routes>
 		</Router>
 	);

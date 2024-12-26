@@ -1,5 +1,3 @@
-// vassbo-mot-1-frontend/src/pages/Register.js
-
 import React, {useState, useContext} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {GameContext} from '../context/GameContext';
@@ -7,6 +5,7 @@ import './Register.css';
 
 const Register = () => {
 	const {joinGame, validateGameCode} = useContext(GameContext);
+
 	const [gameCode, setGameCode] = useState('');
 	const [playerName, setPlayerName] = useState('');
 	const [error, setError] = useState('');
@@ -36,23 +35,18 @@ const Register = () => {
 	};
 
 	const handleJoinGame = async () => {
-		if (!playerName.trim()) {
-			setError('Navn kan ikke være tomt.');
+		if (!gameCode.trim()) {
+			setError('Spillkode kan ikke være tom.');
 			return;
 		}
 
 		try {
-			const response = await joinGame(gameCode, playerName);
-			setError('');
-			localStorage.setItem('playerName', playerName);
+			const response = await joinGame(gameCode, playerName); // Send playerName to the backend
+			sessionStorage.setItem('playerName', response.data.player.name); // Save assigned name
 			navigate(`/game/${gameCode}`);
 		} catch (err) {
 			console.error('Error joining game:', err);
-			if (err.response && err.response.data && err.response.data.error) {
-				setError(err.response.data.error);
-			} else {
-				setError('Feil ved å bli med i spill.');
-			}
+			setError('Feil ved å bli med i spillet.');
 		}
 	};
 
@@ -60,7 +54,6 @@ const Register = () => {
 		<div className="register-container">
 			<h2>Bli med i Spill</h2>
 
-			{/* Input for spillkode */}
 			<input
 				type="text"
 				placeholder="Spillkode (6 siffer)"
@@ -69,12 +62,8 @@ const Register = () => {
 				onChange={(e) => setGameCode(e.target.value)}
 			/>
 
-			{/* Knapp for å validere spillkoden */}
-			{!isGameValid && (
-				<button onClick={handleValidateCode}>Finn Spill</button>
-			)}
+			{!isGameValid && <button onClick={handleValidateCode}>Finn Spill</button>}
 
-			{/* Input for spillernavn vises kun etter spillkode er validert */}
 			{isGameValid && (
 				<>
 					<input
@@ -87,7 +76,6 @@ const Register = () => {
 				</>
 			)}
 
-			{/* Feilmelding */}
 			{error && <p className="error-message">{error}</p>}
 		</div>
 	);

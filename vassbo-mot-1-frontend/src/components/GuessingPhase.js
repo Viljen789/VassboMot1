@@ -1,22 +1,19 @@
-// src/components/GuessingPhase.js
 import React from 'react';
-import Timer from './Timer';
 
-const GuessingPhase = ({currentQuestion, deadline, handleTimeUp, error, successMessage}) => {
+const GuessingPhase = ({question, timeLeft, game}) => {
 	return (
 		<div>
 			<h3>Fase 2: 30 sek gjetting</h3>
-			<p><strong>Spørsmål:</strong> {currentQuestion.text}</p>
-			{/* Timer-komponenten */}
-			{deadline && (
-				<Timer
-					deadline={deadline}
-					onTimeUp={handleTimeUp}
-				/>
-			)}
+			<p><strong>Spørsmål:</strong> {question}</p>
+			<p>Tid igjen: {timeLeft} sekunder</p>
 			<p>Spillere sender inn svar nå ...</p>
-			{error && <p className="error-message">{error}</p>}
-			{successMessage && <p className="success-message">{successMessage}</p>}
+			<ul>
+				{game?.players.map((player) => (
+					<li key={player.name}>
+						{player.name}: {game.guesses[player.name] ? 'Gjetning sendt' : 'Venter ...'}
+					</li>
+				))}
+			</ul>
 		</div>
 	);
 };

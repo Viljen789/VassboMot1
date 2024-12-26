@@ -1,35 +1,20 @@
-// src/components/SetAnswerPhase.js
-import React from 'react';
-import Leaderboard from './Leaderboard';
+// vassbo-mot-1-frontend/src/components/SetAnswerPhase.js
 
-const SetAnswerPhase = ({
-	                        currentQuestion,
-	                        correctAnswer,
-	                        setCorrectAnswerInput,
-	                        handleSetCorrectAnswer,
-	                        handleNextQuestion,
-	                        error,
-	                        successMessage
-                        }) => {
+import React from 'react';
+
+const SetAnswerPhase = ({question, correctAnswer, setCorrectAnswer, onSetCorrectAnswer}) => {
 	return (
 		<div>
 			<h3>Fase 3: Sett riktig svar</h3>
-			<p><strong>Spørsmål:</strong> {currentQuestion.text}</p>
+			<p><strong>Spørsmål:</strong> {question}</p>
 
 			<input
 				type="number"
 				placeholder="Riktig Svar"
 				value={correctAnswer}
-				onChange={(e) => setCorrectAnswerInput(e.target.value)}
+				onChange={(e) => setCorrectAnswer(e.target.value)}
 			/>
-			<button onClick={handleSetCorrectAnswer}>Sett Svar</button>
-			{error && <p className="error-message">{error}</p>}
-			{successMessage && <p className="success-message">{successMessage}</p>}
-
-			<h3>Fase 4: Leaderboard</h3>
-			<p>Se hvem som fikk flest poeng for dette spørsmålet.</p>
-			<Leaderboard/>
-			<button onClick={handleNextQuestion}>Neste spørsmål</button>
+			<button onClick={onSetCorrectAnswer}>Sett Svar</button>
 		</div>
 	);
 };
