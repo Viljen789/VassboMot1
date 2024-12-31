@@ -4,44 +4,44 @@ import React, {createContext, useState, useEffect} from 'react';
 import axios from 'axios';
 import {io} from 'socket.io-client';
 
-// Opprett konteksten
+// Create the context
 export const GameContext = createContext();
 
-// Opprett GameProvider-komponenten
+// Create the GameProvider component
 export const GameProvider = ({children}) => {
 	const [games, setGames] = useState({});
 
-
-	// Initialiser Socket.io klient
+	// Initialize Socket.io client
 	useEffect(() => {
-		const socket = io('http://localhost:3001'); // Backend URL
+		const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+		const socket = io(backendUrl);
 
-		// Lytt etter 'updateGame' hendelser
+		// Listen for 'updateGame' events
 		socket.on('updateGame', (updatedGame) => {
-			setGames(prevGames => ({
+			console.log('Received updated game state:', updatedGame);
+			setGames((prevGames) => ({
 				...prevGames,
-				[updatedGame.gameCode]: updatedGame
+				[updatedGame.gameCode]: updatedGame,
 			}));
 		});
 
-		// Rydd opp ved komponentavlasting
+		// Optionally, handle other Socket.io events like 'updatePhase'
+		socket.on('updatePhase', ({phase}) => {
+			console.log('Received phase update:', phase);
+			// Implement phase handling logic if necessary
+		});
+
+		// Clean up the socket connection on unmount
 		return () => {
 			socket.disconnect();
 		};
 	}, []);
-	useEffect(() => {
-		const socket = io("http://localhost:3001");
 
-		socket.on('gameEnded', ({leaderboard}) => {
-			console.log('Game ended - Final leaderboard:', leaderboard);
-		});
-
-		return () => socket.disconnect(); // Cleanup on unmount
-	}, []);
-	// Definer funksjonene
+	// Define the API functions with '/api' prefix
 	const createGame = async (title) => {
 		try {
-			const response = await axios.post('http://localhost:3001/create-game', {title});
+			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+			const response = await axios.post(`${backendUrl}/create-game`, {title});
 			return response.data;
 		} catch (error) {
 			console.error('Error creating game:', error);
@@ -50,12 +50,13 @@ export const GameProvider = ({children}) => {
 	};
 
 	const joinGame = async (gameCode, playerName) => {
-
 		try {
-			const response = await axios.post('http://localhost:3001/join-game', {
+			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+			const response = await axios.post(`${backendUrl}/join-game`, {
 				gameCode,
 				playerName,
 			});
+
 			console.log('Response from backend joinGame:', response.data); // Debug the response
 			return response.data; // Return only the `data` property
 		} catch (error) {
@@ -63,9 +64,23 @@ export const GameProvider = ({children}) => {
 			throw error;
 		}
 	};
+
 	const addQuestion = async (gameCode, question) => {
 		try {
-			const response = await axios.post('http://localhost:3001/add-question', {gameCode, question});
+			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+			const response = await axios.post(`${backendUrl}/add-question`, {
+				gameCode,
+				question,
+			});
+
+			setGames((prevGames) => ({
+				...prevGames,
+				[gameCode]: {
+					...prevGames[gameCode],
+					questions: response.data.questions, // Use the updated array
+				},
+			}));
+
 			return response.data;
 		} catch (error) {
 			console.error('Error adding question:', error);
@@ -75,7 +90,11 @@ export const GameProvider = ({children}) => {
 
 	const startGame = async (gameCode) => {
 		try {
-			const response = await axios.post('http://localhost:3001/start-game', {gameCode});
+			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+			const response = await axios.post(`${backendUrl}/start-game`, {
+				gameCode,
+			});
+
 			return response.data;
 		} catch (error) {
 			console.error('Error starting game:', error);
@@ -86,7 +105,9 @@ export const GameProvider = ({children}) => {
 	const validateGameCode = async (gameCode) => {
 		try {
 			console.log(`Validating game code: ${gameCode}`);
-			const response = await axios.get(`http://localhost:3001/validateGameCode/${gameCode}`);
+			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+			const response = await axios.get(`${backendUrl}/validateGameCode/${gameCode}`);
+
 			console.log('Validate game code response:', response.data);
 			return response.data.isValid;
 		} catch (error) {
@@ -97,16 +118,26 @@ export const GameProvider = ({children}) => {
 
 	const startRound = async (gameCode) => {
 		try {
-			const response = await axios.post('http://localhost:3001/start-round', {gameCode});
+			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+			const response = await axios.post(`${backendUrl}/start-round`, {
+				gameCode,
+			});
+
 			return response.data;
 		} catch (error) {
 			console.error('Error starting round:', error);
 			throw error;
 		}
 	};
+
 	const setCorrectAnswer = async (gameCode, correctAnswer) => {
 		try {
-			const response = await axios.post('http://localhost:3001/set-correct-answer', {gameCode, correctAnswer});
+			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+			const response = await axios.post(`${backendUrl}/set-correct-answer`, {
+				gameCode,
+				correctAnswer,
+			});
+
 			return response.data;
 		} catch (error) {
 			console.error('Error setting correct answer:', error);
@@ -116,17 +147,24 @@ export const GameProvider = ({children}) => {
 
 	const submitGuess = async (gameCode, playerName, guess) => {
 		try {
-			const response = await axios.post('http://localhost:3001/submit-guess', {gameCode, playerName, guess});
+			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+			const response = await axios.post(`${backendUrl}/submit-guess`, {
+				gameCode,
+				playerName,
+				guess,
+			});
+
 			return response.data;
 		} catch (error) {
 			console.error('Error submitting guess:', error);
 			throw error;
 		}
 	};
+
 	const updateQuestion = async (gameCode, index, updatedQuestion) => {
 		try {
-			// Call the backend API to update the question
-			const response = await axios.put(`/api/games/${gameCode}/questions/${index}`, updatedQuestion);
+			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+			const response = await axios.put(`${backendUrl}/games/${gameCode}/questions/${index}`, updatedQuestion);
 
 			// Update the local games state with the updated question
 			setGames((prevGames) => {
@@ -157,7 +195,8 @@ export const GameProvider = ({children}) => {
 			startRound,
 			setCorrectAnswer,
 			submitGuess,
-			updateQuestion
+			updateQuestion,
+			setGames
 		}}>
 			{children}
 		</GameContext.Provider>

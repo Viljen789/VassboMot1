@@ -1,0 +1,41 @@
+@import '../styles/variables.css';
+
+.start-game-phase {
+    padding: var(--spacing-lg);
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: var(--font-family);
+    text-align: center;
+}
+
+.start-game-phase h3 {
+    color: var(--secondary-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.start-game-phase button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 1rem;
+    color: #ffffff;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.start-game-phase button:hover {
+    background-color: var(--button-hover-color);
+}
+
+.start-game-phase .error-message {
+    color: var(--error-color);
+    margin-top: var(--spacing-sm);
+}
+
+.start-game-phase .success-message {
+    color: var(--success-color);
+    margin-top: var(--spacing-sm);
+}

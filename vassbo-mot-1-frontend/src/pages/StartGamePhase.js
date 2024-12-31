@@ -1,5 +1,6 @@
 // src/components/StartGamePhase.js
 import React, {useState} from 'react';
+import '../components/StartGamePhase.css';
 
 const StartGamePhase = ({handleStartGame, error, successMessage}) => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -11,7 +12,7 @@ const StartGamePhase = ({handleStartGame, error, successMessage}) => {
 	};
 
 	return (
-		<div>
+		<div className="start-game-phase">
 			<h3>Fase 0: Start spillet</h3>
 			<button onClick={handleClick} disabled={isLoading}>
 				{isLoading ? 'Starter...' : 'Start Spillet'}

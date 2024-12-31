@@ -1,0 +1,88 @@
+@import '../styles/variables.css';
+
+.guessing-phase {
+    padding: var(--spacing-lg);
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: var(--font-family);
+}
+
+.guessing-phase h3 {
+    color: var(--secondary-color);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.guessing-phase p {
+    color: var(--text-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.time-left {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.timer-bar {
+    width: 100%;
+    height: 10px;
+    background-color: var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-top: var(--spacing-xs);
+}
+
+.timer-fill {
+    height: 100%;
+    background-color: var(--primary-color);
+    transition: width 1s linear;
+}
+
+.players-list {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--spacing-md);
+}
+
+.player-item {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.player-item:last-child {
+    border-bottom: none;
+}
+
+.player-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.player-status {
+    font-size: 0.9rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.player-status.sent {
+    background-color: var(--success-color);
+    color: #ffffff;
+}
+
+.player-status.waiting {
+    background-color: var(--border-color);
+    color: var(--text-color);
+}

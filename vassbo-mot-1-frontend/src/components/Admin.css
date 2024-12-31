@@ -1,0 +1,148 @@
+@import '../styles/variables.css';
+
+.admin-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: var(--spacing-lg);
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: var(--font-family);
+}
+
+.admin-container h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+.create-game-section,
+.questions-section,
+.players-section,
+.start-game-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-container input[type="text"],
+.admin-container input[type="number"] {
+    width: 100%;
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+}
+
+.admin-container button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 1rem;
+    color: #ffffff;
+    background-color: var(--secondary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.admin-container button:hover {
+    background-color: #38B0A6; /* Darker Teal */
+}
+
+.questions-list {
+    list-style: none;
+    padding: 0;
+}
+
+.question-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.question-item:last-child {
+    border-bottom: none;
+}
+
+.question-item span {
+    color: var(--text-color);
+}
+
+.question-item button {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.9rem;
+    background-color: var(--primary-color);
+}
+
+.question-item button:hover {
+    background-color: var(--button-hover-color);
+}
+
+.edit-question input[type="text"],
+.edit-question input[type="number"] {
+    width: 100%;
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+}
+
+.range-inputs {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.range-inputs input {
+    width: 48%;
+}
+
+.add-question-section h4 {
+    color: var(--secondary-color);
+    margin-bottom: var(--spacing-sm);
+}
+
+.players-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.players-section li {
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.players-section li:last-child {
+    border-bottom: none;
+}
+
+.start-game-section button {
+    width: 100%;
+    background-color: var(--primary-color);
+}
+
+.start-game-section button:disabled {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+}
+
+.warning-message {
+    color: var(--error-color);
+    margin-top: var(--spacing-sm);
+    text-align: center;
+}
+
+.error-message {
+    color: var(--error-color);
+    margin-top: var(--spacing-sm);
+    text-align: center;
+}
+
+.success-message {
+    color: var(--success-color);
+    margin-top: var(--spacing-sm);
+    text-align: center;
+}

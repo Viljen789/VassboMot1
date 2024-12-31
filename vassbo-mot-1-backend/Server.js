@@ -1,3 +1,5 @@
+// vassbo-mot-1-backend/server.js
+
 const express = require('express');
 const http = require('http');
 const {Server} = require('socket.io');
@@ -11,7 +13,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-	origin: 'http://localhost:3000', // Frontend URL
+	origin: '*', // Consider restricting this in production
 }));
 app.use(bodyParser.json());
 
@@ -26,23 +28,23 @@ app.set('io', io);
 
 // Import and use game routes
 const gameRoutes = require('./routes/gameRoutes');
-app.use('/', gameRoutes);
+app.use('/api', gameRoutes);
 
 // Socket.io Events
 io.on('connection', (socket) => {
-	console.log('En klient er tilkoblet');
+	console.log('A client connected');
 
 	socket.on('joinRoom', (gameCode) => {
 		socket.join(gameCode);
-		console.log(`Klient har lagt seg til rommet: ${gameCode}`);
+		console.log(`Client joined room: ${gameCode}`);
 	});
 
 	socket.on('disconnect', () => {
-		console.log('En klient har koblet fra');
+		console.log('A client disconnected');
 	});
 });
 
 // Start the server
-server.listen(PORT, () => {
-	console.log(`Server kjører på port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+	console.log(`Server running on port ${PORT}`);
 });

@@ -1,13 +1,11 @@
-// src/pages/Home.js
-
 import React from 'react';
 import {Link} from 'react-router-dom';
-import './Home.css';
+import '../components/Home.css';
 
 const Home = () => {
 	return (
 		<div className="home-container">
-			<h1>Velkommen til VassbøMot1</h1>
+			<h1 className="home-title">Velkommen til VassbøMot1</h1>
 			<div className="button-group">
 				<Link to="/admin">
 					<button className="home-button">Admin</button>

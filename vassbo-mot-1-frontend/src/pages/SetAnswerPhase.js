@@ -1,10 +1,11 @@
 // vassbo-mot-1-frontend/src/components/SetAnswerPhase.js
 
 import React from 'react';
+import '../components/SetAnswerPhase.css';
 
 const SetAnswerPhase = ({question, correctAnswer, setCorrectAnswer, onSetCorrectAnswer}) => {
 	return (
-		<div>
+		<div className="set-answer-phase">
 			<h3>Fase 3: Sett riktig svar</h3>
 			<p><strong>Spørsmål:</strong> {question}</p>
 

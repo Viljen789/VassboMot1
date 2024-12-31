@@ -4,184 +4,107 @@ class Game {
 	constructor(title, gameCode) {
 		this.title = title;
 		this.gameCode = gameCode;
-		this.players = [];
-		this.questions = [];
+		this.players = []; // Array of { name: string, score: number }
+		this.questions = []; // Array of { text: string, range: [min, max] }
 		this.currentQuestionIndex = 0;
-		this.status = 'created'; // status kan være 'created', 'started', 'ended'
+		this.status = 'waiting'; // 'waiting', 'started', etc.
+		this.guesses = {}; // { [playerName]: guess }
 		this.roundActive = false;
+		this.roundStartedAt = null;
 		this.correctAnswer = null;
-		this.guesses = {}; // Initialiser guesses
 	}
 
-	autoSubmitGuesses(io) {
-		if (!this.roundActive) {
-			throw new Error('Ingen aktiv runde. Kan ikke auto-sende gjetninger.');
-		}
-
-		this.players.forEach((player) => {
-			if (!this.guesses[player.name]) {
-				const currentQuestion = this.questions[this.currentQuestionIndex];
-				const autoGuess = currentQuestion.range[0]; // Use the minimum value as a default guess
-				this.guesses[player.name] = autoGuess;
-				console.log(`Auto-submitting guess for player: ${player.name}, guess: ${autoGuess}`);
-
-				// Emit to clients that a guess was auto-submitted
-				io.to(this.gameCode).emit('playerGuessed', {playerName: player.name, guess: autoGuess});
-			}
-		});
-	}
-
-	// Add this log inside `addPlayer` in your Game model:
-	addPlayer(name) {
-		if (!name) {
-			throw new Error('Player name cannot be empty.');
-		}
-
-		const normalizedPlayerName = name.trim().toLowerCase();
-		const isDuplicate = this.players.some(
-			(player) => player.name.toLowerCase() === normalizedPlayerName
-		);
-
-		if (isDuplicate) {
-			console.log(`Duplicate player name: ${name}`);
-			throw new Error('Player name already exists.');
-		}
-
-		const player = {name, score: 0}; // Create the player
-		this.players.push(player); // Add to players list
-		console.log('Player successfully added:', player); // Verify that player is added
+	addPlayer(playerName) {
+		const normalizedPlayerName = playerName.trim();
+		this.players.push({name: normalizedPlayerName, score: 0});
+		console.log(`Player '${normalizedPlayerName}' added to game '${this.gameCode}'.`);
 	}
 
 	addQuestion(question) {
 		this.questions.push(question);
+		console.log(`Question '${question.text}' added to game '${this.gameCode}'.`);
 	}
 
-	startGame() {
-		if (!this.isReadyToStart()) {
-			throw new Error('Spillet krever minst to spillere og ett spørsmål for å starte.');
+	startGame(io) {
+		if (this.players.length < 2) {
+			throw new Error('Minst to spillere må delta før spillet kan starte.');
 		}
-		console.log('Starting the game with players:', this.players);
+		if (this.questions.length < 1) {
+			throw new Error('Spillet må ha minst ett spørsmål.');
+		}
 		this.status = 'started';
-	}
-
-	isReadyToStart() {
-		return this.status === 'created' && this.players.length >= 2 && this.questions.length > 0;
-	}
-
-
-	setCorrectAnswer(correctAnswer, io) {
-		if (!this.roundActive) {
-			throw new Error('Ingen aktiv runde.');
-		}
-		this.autoSubmitGuesses(io);
-		this.correctAnswer = correctAnswer;
 		this.roundActive = false;
-
-		// Beregn poeng basert på svarene
-		this.players.forEach(player => {
-			const guess = this.guesses[player.name];
-			if (guess !== undefined) {
-				const currentQuestion = this.questions[this.currentQuestionIndex];
-				const [minRange, maxRange] = currentQuestion.range;
-				const distance = Math.abs(guess - correctAnswer);
-				const normalizedDistance = Math.min(distance / (maxRange - minRange), 1);
-				const score = Math.round(100 * Math.pow(1 - normalizedDistance, 2));
-				player.score += score;
-			}
-		});
-
-		// Emit til alle spillere at fasiten er satt og oppdatert leaderboard
-		io.to(this.gameCode).emit('roundEnded', {
-			correctAnswer,
-			leaderboard: this.players.sort((a, b) => b.score - a.score),
-		});
-
-		// Increment question index
-		this.currentQuestionIndex += 1;
-		this.guesses = {}; // Resett gjetninger for neste runde
-
-		// Check if this was the last question
-		if (this.currentQuestionIndex >= this.questions.length) {
-			// Game has ended, emit final leaderboard
-			this.status = 'ended'; // Update the game status to ended
-			io.to(this.gameCode).emit('gameEnded', {
-				leaderboard: this.players.sort((a, b) => b.score - a.score),
-			});
-		} else {
-			// Emit updated game state for the next round
-			io.to(this.gameCode).emit('updateGame', this);
-		}
+		this.correctAnswer = null;
+		io.to(this.gameCode).emit('updateGame', this);
+		console.log(`Game '${this.gameCode}' started.`);
 	}
 
 	startRound(io) {
 		if (this.status !== 'started') {
-			throw new Error('Spillet må være startet for å begynne en runde.');
-		}
-		if (this.currentQuestionIndex >= this.questions.length) {
-			throw new Error('Ingen flere spørsmål tilgjengelig.');
+			throw new Error('Spillet er ikke startet.');
 		}
 		if (this.roundActive) {
 			throw new Error('En runde er allerede aktiv.');
 		}
-
+		if (this.currentQuestionIndex >= this.questions.length) {
+			throw new Error('Ingen flere spørsmål tilgjengelig.');
+		}
 		this.roundActive = true;
-		const currentQuestion = this.questions[this.currentQuestionIndex];
+		this.roundStartedAt = Date.now();
+		this.correctAnswer = null;
+		this.guesses = {}; // Reset guesses for the new round
+		io.to(this.gameCode).emit('updatePhase', {phase: 2}); // Example phase
+		io.to(this.gameCode).emit('updateGame', this);
+		console.log(`Round started for game '${this.gameCode}'. Question index: ${this.currentQuestionIndex}`);
+	}
 
-		const roundStartedAt = Date.now();
-		this.roundStartedAt = roundStartedAt;
-
-		io.to(this.gameCode).emit('startRound', {
-			question: currentQuestion.text,
-			range: currentQuestion.range,
-			roundStartedAt,
+	setCorrectAnswer(correctAnswer, io) {
+		if (!this.roundActive) {
+			throw new Error('Ingen aktiv runde for å sette riktig svar.');
+		}
+		this.correctAnswer = correctAnswer;
+		this.roundActive = false;
+		// Calculate scores
+		this.players.forEach(player => {
+			const playerGuess = this.guesses[player.name];
+			if (playerGuess !== undefined) {
+				const difference = Math.abs(playerGuess - correctAnswer);
+				const points = Math.max(0, 100 - difference); // Example scoring
+				player.score += points;
+				console.log(`Player '${player.name}' scored ${points} points.`);
+			}
 		});
-
-		console.log(`Runde startet for spill: ${this.gameCode}, Spørsmål: ${currentQuestion.text}`);
+		io.to(this.gameCode).emit('updateGame', this);
+		console.log(`Correct answer set for game '${this.gameCode}': ${correctAnswer}`);
 	}
 
 	submitGuess(playerName, guess, io) {
-		const player = this.players.find((p) => p.name === playerName);
-		if (!this.roundActive) {
-			throw new Error('Ingen aktiv runde. Du kan ikke gjette nå.');
-		}
+		const normalizedPlayerName = playerName.trim();
+		console.log(`Submitting guess for player: '${normalizedPlayerName}' with guess: ${guess} in game '${this.gameCode}'`);
+
+		const player = this.players.find(p => p.name.toLowerCase() === normalizedPlayerName.toLowerCase());
 		if (!player) {
+			console.log(`Player '${normalizedPlayerName}' not found in game '${this.gameCode}'.`);
 			throw new Error('Spiller ikke funnet.');
 		}
-
-		if (this.guesses[playerName] !== undefined) {
-			throw new Error('Du har allerede sendt inn et svar for denne runden.');
+		if (this.guesses[normalizedPlayerName] !== undefined) {
+			console.log(`Player '${normalizedPlayerName}' has already submitted a guess.`);
+			throw new Error('Gjetning allerede sendt.');
 		}
-
-		const currentQuestion = this.questions[this.currentQuestionIndex];
-		const [minRange, maxRange] = currentQuestion.range;
-
-		if (guess < minRange || guess > maxRange) {
-			throw new Error(`Gjetningen må være innenfor området ${minRange} til ${maxRange}.`);
-		}
-		console.log('Player data:', this.players);
-		console.log('Received guess from:', playerName, 'with value:', guess);
-
-		this.guesses[playerName] = Number(guess);
-
-		// Notify clients that this player has submitted a guess
-		io.to(this.gameCode).emit('playerGuessed', {playerName, guess});
-		console.log(`Spiller ${playerName} har sendt inn gjetning: ${guess}`);
+		this.guesses[normalizedPlayerName] = guess;
+		io.to(this.gameCode).emit('updateGame', this);
+		console.log(`Player '${normalizedPlayerName}' submitted guess: ${guess}`);
 	}
 
 	updateQuestion(index, updatedQuestion) {
-		if (!this.questions[index]) {
-			throw new Error('Question does not exist.');
-		}
-		if (
-			!updatedQuestion.text ||
-			!Array.isArray(updatedQuestion.range) ||
-			updatedQuestion.range.length !== 2 ||
-			updatedQuestion.range[0] >= updatedQuestion.range[1]
-		) {
-			throw new Error('Invalid question data.');
+		if (index < 0 || index >= this.questions.length) {
+			throw new Error('Ugyldig spørsmålindeks.');
 		}
 		this.questions[index] = updatedQuestion;
+		console.log(`Question at index ${index} updated in game '${this.gameCode}':`, updatedQuestion);
 	}
+
+	// Additional methods as needed
 }
 
 module.exports = Game;

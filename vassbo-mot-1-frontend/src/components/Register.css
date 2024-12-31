@@ -1,0 +1,61 @@
+@import '../styles/variables.css';
+
+.register-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: var(--spacing-lg);
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: var(--font-family);
+}
+
+.register-container h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+.register-container input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+}
+
+.register-container button {
+    width: 100%;
+    padding: var(--spacing-sm);
+    font-size: 1rem;
+    color: #ffffff;
+    background-color: var(--secondary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.register-container button:hover {
+    background-color: #38B0A6; /* Darker Teal */
+}
+
+.error-message {
+    color: var(--error-color);
+    margin-top: var(--spacing-sm);
+    text-align: center;
+}
+
+.success-message {
+    color: var(--success-color);
+    margin-top: var(--spacing-sm);
+    text-align: center;
+}
+
+.welcome-message {
+    text-align: center;
+    color: var(--success-color);
+    font-size: 1.2rem;
+}

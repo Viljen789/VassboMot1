@@ -1,38 +1,171 @@
-.App {
-  text-align: center;
+/*/* src/index.css or src/App.css */
+
+/* CSS Variables for Consistent Theme */
+:root {
+    --primary-color: #4A90E2; /* Soft Blue */
+    --secondary-color: #1F1F1F; /* Dark Background */
+    --background-color: #121212; /* Very Dark Gray */
+    --text-color: #E0E0E0; /* Light Gray for Text */
+    --error-color: #E74C3C; /* Red */
+    --success-color: #2ECC71; /* Green */
+    --button-hover-color: #357ABD; /* Darker Blue */
+    --border-radius: 8px;
+    --transition-speed: 0.3s;
+    --font-family: 'Roboto', sans-serif;
+    --input-background: #2C2C2C; /* Darker Input Background */
+    --input-border: #4A90E2; /* Input Border Color */
+    --input-placeholder: #A0A0A0; /* Placeholder Text Color */
+    --input-text: #FFFFFF; /* Input Text Color */
+    --input-focus-bg: #3A3A3A; /* Input Background on Focus */
+    --input-shadow: 0 0 5px rgba(74, 144, 226, 0.5); /* Input Shadow on Focus */
+    --border-color: #dddddd;
+    --slider-track-color: #dddddd;
+    --slider-border-color: #bbbbbb;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Apply Global Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+body {
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    min-height: 100vh;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+/* Typography */
+h1, h2, h3, h4 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    font-weight: 700;
 }
 
-.App-link {
-  color: #61dafb;
+p {
+    margin-bottom: 1rem;
+    font-size: 1rem;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Links */
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+    transition: color var(--transition-speed);
 }
+
+a:hover {
+    color: var(--button-hover-color);
+}
+
+/* Buttons */
+button {
+    cursor: pointer;
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: background-color var(--transition-speed), transform var(--transition-speed);
+}
+
+button:hover {
+    background-color: var(--button-hover-color);
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+button:disabled {
+    background-color: #555555;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Inputs, Selects, Textareas */
+input, select, textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--input-background); /* Darker background */
+    color: var(--input-text); /* Light text */
+    border: 1px solid var(--input-border); /* Consistent border color */
+    border-radius: var(--border-radius); /* Rounded corners */
+    font-size: 1rem;
+    transition: border-color var(--transition-speed), background-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--input-placeholder); /* Light gray placeholder */
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary-color);
+    background-color: var(--input-focus-bg); /* Slightly lighter background on focus */
+    box-shadow: var(--input-shadow);
+    outline: none;
+}
+
+/* Utility Classes */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.error-message {
+    color: var(--error-color);
+    background-color: rgba(231, 76, 60, 0.1);
+    padding: 1rem;
+    border-left: 4px solid var(--error-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.success-message {
+    color: var(--success-color);
+    background-color: rgba(46, 204, 113, 0.1);
+    padding: 1rem;
+    border-left: 4px solid var(--success-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+
+/* Accessible Focus States */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.timer-fill {
+    transition: width 1s linear;
+}
+
+/* Example: Adding a gradient to the body */
+body {
+    background: linear-gradient(135deg, #1F1F1F, #121212);
+    color: var(--text-color);
+}
+

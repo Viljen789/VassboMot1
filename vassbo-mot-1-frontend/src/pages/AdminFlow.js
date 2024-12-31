@@ -1,19 +1,20 @@
 // vassbo-mot-1-frontend/src/pages/AdminFlow.js
-
-import React, {useContext, useState, useEffect, useRef} from 'react'; // Add `useRef`
+import React, {useContext, useState, useEffect, useRef} from 'react';
 import {useParams} from 'react-router-dom';
 import {GameContext} from '../context/GameContext';
-import PresentQuestionPhase from '../components/PresentQuestionPhase';
-import GuessingPhase from '../components/GuessingPhase';
-import SetAnswerPhase from '../components/SetAnswerPhase';
-import Leaderboard from '../components/Leaderboard';
+import PresentQuestionPhase from './PresentQuestionPhase';
+import GuessingPhase from './GuessingPhase';
+import SetAnswerPhase from './SetAnswerPhase';
+import Leaderboard from './Leaderboard';
 import {io} from 'socket.io-client';
 import axios from 'axios';
-
+import '../components/AdminFlow.css';
 
 const AdminFlow = () => {
 	useEffect(() => {
-		const socket = io("http://localhost:3000");
+		const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+		const socket = io(backendUrl);
+
 
 		socket.on('gameEnded', ({leaderboard}) => {
 			setPhase(4); // Go to final leaderboard phase
@@ -24,7 +25,9 @@ const AdminFlow = () => {
 	}, []);
 	const timerIdRef = useRef(null);
 	useEffect(() => {
-		const socket = io("http://localhost:3000");
+		const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+		const socket = io(backendUrl);
+
 		socket.on('updatePhase', ({phase}) => setPhase(phase));
 
 		return () => socket.disconnect(); // Clean up listener
@@ -123,13 +126,12 @@ const AdminFlow = () => {
 
 	// Render basert på fasen vi er i
 	if (!currentGame) return <p>Spill ikke funnet.</p>;
-	if (!currentQuestion) return <p>Ingen spørsmål tilgjengelig.</p>;
 
 	return (
 		<div className="admin-flow-container">
-			<h2>{currentGame.title}</h2>
+			<h2 className="game-title">{currentGame.title}</h2>
 
-			{phase === 1 && (
+			{phase === 1 && currentQuestion && (
 				<PresentQuestionPhase
 					question={currentQuestion.text}
 					questionNumber={currentQuestionIndex + 1}

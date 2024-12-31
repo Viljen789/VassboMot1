@@ -1,0 +1,9 @@
+/* src/components/Timer.css */
+
+.timer {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}

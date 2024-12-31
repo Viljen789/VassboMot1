@@ -1,5 +1,6 @@
 // src/components/Timer.js
 import React, {useEffect, useState} from 'react';
+import '../components/Timer.css';
 
 const Timer = ({deadline, onTimeUp}) => {
 	const calculateTimeLeft = () => {

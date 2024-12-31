@@ -1,18 +1,20 @@
-// vassbo-mot-1-frontend/src/components/Leaderboard.js
+// src/components/Leaderboard.js
 
 import React from 'react';
+import '../components/Leaderboard.css'; // Import the CSS file
 
 const Leaderboard = ({game, onNextQuestion, isFinal = false}) => {
 	const sortedPlayers = [...game.players].sort((a, b) => b.score - a.score);
 
 	return (
-		<div>
+		<div className="leaderboard">
 			<h3>{isFinal ? "Sluttresultat: Leaderboard" : "Fase 4: Leaderboard"}</h3>
 			<p>{isFinal ? "Endelige poengsummer:" : "Se hvem som fikk flest poeng for dette spørsmålet."}</p>
 			<ul>
 				{sortedPlayers.map((player, index) => (
 					<li key={index}>
-						{player.name}: {player.score} poeng
+						<span>{index + 1}. {player.name}</span>
+						<span>{player.score} poeng</span>
 					</li>
 				))}
 			</ul>

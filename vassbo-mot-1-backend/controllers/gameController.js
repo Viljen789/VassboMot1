@@ -23,7 +23,7 @@ const createGame = (req, res) => {
 	console.log('Received create-game request with title:', title);
 	let gameCode = generateGameCode();
 
-	// Sørg for at koden er unik
+	// Ensure the code is unique
 	while (games[gameCode]) {
 		console.log('Generated gameCode already exists:', gameCode);
 		gameCode = generateGameCode();
@@ -36,49 +36,38 @@ const createGame = (req, res) => {
 
 	res.json(newGame);
 
-	// Emit til alle tilkoblede klienter
+	// Emit to all connected clients
 	req.app.get('io').emit('updateGame', newGame);
 };
-// Game Controller - joinGame
+
 const joinGame = (req, res) => {
-	// Log all operations
 	const {gameCode, playerName} = req.body;
-	console.log('Join game request:', {gameCode, playerName}); // Debug input
+
+	console.log(`JoinGame request: gameCode=${gameCode}, playerName=${playerName}`);
 
 	const game = games[gameCode];
 	if (!game) {
-		console.log('Game not found:', gameCode);
-		return res.status(404).json({error: 'Spill ikke funnet.'});
+		console.error(`Game not found for gameCode: ${gameCode}`);
+		return res.status(404).json({error: 'Game not found.'});
+	}
+
+	const isDuplicate = game.players.some(player => player.name.toLowerCase() === playerName.toLowerCase());
+	if (isDuplicate) {
+		console.error(`Duplicate player detected: ${playerName}`);
+		return res.status(400).json({error: 'Player name already taken.'});
 	}
 
 	try {
-		// Ensure no duplicate names
-		const isDuplicateName = game.players.some(
-			(player) => player.name.toLowerCase() === playerName.toLowerCase()
-		);
-
-		if (isDuplicateName) {
-			console.error(`Duplicate player detected: ${playerName}`);
-			return res.status(400).json({error: 'Spillernavn er allerede tatt. Prøv et annet navn.'});
-		}
-
-		// Add player
 		game.addPlayer(playerName);
+		console.log(`Player added: ${playerName}. Players now:`, game.players);
 
-		console.log('Player added successfully:', playerName); // Debug player is added
-		console.log('Current players in game:', game.players); // Verify player list
+		// Emit the updated game object to all connected clients
+		req.app.get('io').emit('updateGame', game);
 
-		res.status(200).json({
-			message: 'Spiller lagt til.',
-			player: {name: playerName, score: 0}, // Send confirmation back to client
-		});
-
-		// Broadcast to all clients
-		req.app.get('io').emit('updateGame', game); // Debug emit
-		console.log(`Game state after adding player (${gameCode}):`, game);
-	} catch (err) {
-		console.error('Error adding player:', err.message);
-		return res.status(500).json({error: 'Uventet feil oppsto. Prøv igjen senere.'});
+		res.json({player: {name: playerName, score: 0}});
+	} catch (error) {
+		console.error('Error adding player:', error);
+		res.status(500).json({error: 'An error occurred while adding the player.'});
 	}
 };
 
@@ -197,6 +186,7 @@ const submitGuess = (req, res) => {
 
 	try {
 		game.submitGuess(playerName, guess, req.app.get('io'));
+		console.log(`Player '${playerName}' submitted guess: ${guess} for game '${gameCode}'.`);
 	} catch (err) {
 		console.log('Error submitting guess:', err.message);
 		return res.status(400).json({error: err.message});
@@ -204,7 +194,7 @@ const submitGuess = (req, res) => {
 
 	res.json({message: 'Gjetning mottatt.'});
 
-	// Emit til alle tilkoblede klienter
+	// Emit to all connected clients
 	req.app.get('io').emit('updateGame', game);
 };
 const updateQuestion = (req, res) => {
@@ -234,6 +224,7 @@ const updateQuestion = (req, res) => {
 	}
 };
 module.exports = {
+	games,
 	createGame,
 	joinGame,
 	addQuestion,
