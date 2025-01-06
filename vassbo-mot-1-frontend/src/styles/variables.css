@@ -1,9 +1,9 @@
 :root {
     /* Color Palette */
-    --primary-color: #4A90E2; /* Soft Blue */
-    --secondary-color: #091a62; /* Soft Teal */
-    --background-color: #F5F7FA; /* Light Gray */
-    --text-color: #333333; /* Dark Gray */
+    --primary-color: #7091E6; /* Soft Blue */
+    --secondary-color: #3D52A0; /* Dark Background */
+    --background-color: #EDE8F5; /* Very Dark Gray */
+    --text-color: #ADBBDA; /* Light Gray for Text */
     --error-color: #E74C3C; /* Soft Red */
     --success-color: #2ECC71; /* Soft Green */
     --button-hover-color: #357ABD; /* Darker Blue */

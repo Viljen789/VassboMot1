@@ -1,11 +1,10 @@
 /*/* src/index.css or src/App.css */
 
-/* CSS Variables for Consistent Theme */
 :root {
-    --primary-color: #4A90E2; /* Soft Blue */
-    --secondary-color: #1F1F1F; /* Dark Background */
-    --background-color: #121212; /* Very Dark Gray */
-    --text-color: #E0E0E0; /* Light Gray for Text */
+    --primary-color: #3D52A0; /* Soft Blue */
+    --secondary-color: #7091E6; /* Dark Background */
+    --background-color: #8697C4; /* Very Dark Gray */
+    --text-color: #ADBBDA; /* Light Gray for Text */
     --error-color: #E74C3C; /* Red */
     --success-color: #2ECC71; /* Green */
     --button-hover-color: #357ABD; /* Darker Blue */

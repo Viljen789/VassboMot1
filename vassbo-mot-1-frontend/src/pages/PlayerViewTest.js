@@ -48,7 +48,7 @@ const mockGames = {
 			{text: 'What is 2 + 2?', range: [0, 10]},
 		],
 		currentQuestionIndex: 0,
-		roundStartedAt: Date.now() - 30000, // assuming round ended 30 seconds ago
+		roundStartedAt: Date.now() - 300000, // assuming round ended 30 seconds ago
 	},
 };
 

@@ -71,7 +71,7 @@
 }
 
 .question-item button {
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-sm);
     font-size: 0.9rem;
     background-color: var(--primary-color);
 }
@@ -83,27 +83,36 @@
 .edit-question input[type="text"],
 .edit-question input[type="number"] {
     width: 100%;
-    padding: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
+    box-sizing: border-box;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     font-size: 0.9rem;
 }
 
+/* Parent container for input fields in add-question-section */
+.add-question-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.add-question-section input[type="text"],
+.add-question-section .range-inputs input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .range-inputs {
     display: flex;
+    justify-content: space-between;
     gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
+    width: 100%;
 }
 
 .range-inputs input {
-    width: 48%;
+    flex: 1;
 }
 
-.add-question-section h4 {
-    color: var(--secondary-color);
-    margin-bottom: var(--spacing-sm);
-}
 
 .players-section ul {
     list-style: none;
@@ -111,7 +120,7 @@
 }
 
 .players-section li {
-    padding: var(--spacing-xs) 0;
+    padding: var(--spacing-sm) 0;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -133,16 +142,41 @@
     color: var(--error-color);
     margin-top: var(--spacing-sm);
     text-align: center;
+    animation: fadeIn 0.7s;
 }
 
-.error-message {
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+
+.error-message, .edit-error-message {
     color: var(--error-color);
     margin-top: var(--spacing-sm);
     text-align: center;
+    animation: fadeInOut 0.7s;
 }
 
-.success-message {
+.save-button, .cancel-button, .edit-error-message, .edit-success-message {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 10px;
+    text-align: center;
+}
+
+
+.success-message, .edit-success-message {
     color: var(--success-color);
     margin-top: var(--spacing-sm);
     text-align: center;
+    animation: fadeIn 0.7s;
+}
+
+.edit-success-message {
+    animation: fadeIn 0.7s;
 }

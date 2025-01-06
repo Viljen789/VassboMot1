@@ -215,7 +215,6 @@
 }
 
 /* CUSTOM CHECKBOX STYLING */
-/* CUSTOM CHECKBOX STYLING */
 .custom-checkbox-container {
     display: flex;
     align-items: center;
@@ -230,6 +229,8 @@
     height: 20px;
     margin-right: 8px;
     cursor: pointer;
+    opacity: 1;
+    transition: opacity 0.3s ease;
 }
 
 .custom-checkbox input {
@@ -246,13 +247,16 @@
     width: 20px;
     background-color: var(--background-color);
     border-radius: var(--border-radius);
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, opacity 0.3s ease;
     border: 2px solid var(--primary-color);
     transform: rotate(0deg);
 }
 
-.custom-checkbox:hover input ~ .checkmark {
-    background-color: var(--slider-track-color);
+.custom-checkbox input:disabled ~ .checkmark {
+    background-color: #e0e0e0; /* Light gray background for disabled state */
+    border-color: #bdbdbd; /* Light gray border */
+    cursor: not-allowed;
+    opacity: 0.6; /* Reduce opacity to indicate disabled state */
 }
 
 .custom-checkbox input:checked ~ .checkmark {

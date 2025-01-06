@@ -114,11 +114,11 @@ const PlayerGameView = ({mockGame}) => {
 				setSuccessMessage('');
 
 				if (currentGame.roundStartedAt) {
-					const computedDeadline = currentGame.roundStartedAt + 30000;
+					const computedDeadline = currentGame.roundStartedAt + 300000;
 					setDeadline(computedDeadline);
 				} else {
 					// Fallback if roundStartedAt is missing
-					setDeadline(Date.now() + 30000);
+					setDeadline(Date.now() + 300000);
 				}
 			} else if (!currentGame.roundActive && currentGame.correctAnswer === null) {
 				// Waiting for the correct answer
@@ -223,19 +223,21 @@ const PlayerGameView = ({mockGame}) => {
 
 	// Validate the current game
 	const currentGame = mockGame || games[gameCode];
-	if (!currentGame) {
-		return <p>Fant ikke spillet med kode {gameCode}.</p>;
-	}
-	if (!currentGame.questions) {
-		return <p>Ingen spørsmål ble funnet i dette spillet.</p>;
+
+	// **Modified Condition Below**
+	// Display welcome message if the game hasn't started yet
+	if (!currentGame || currentGame.status !== 'started') {
+		return (
+			<div className="player-game-view">
+				<h2>Velkommen {playerName}!</h2>
+				<p>Vennligst vent mens spillet settes opp.</p>
+			</div>
+		);
 	}
 
-	const currentQuestion = currentGame.questions[currentGame.currentQuestionIndex];
-	if (!currentQuestion) {
-		return <p>Ingen spørsmål tilgjengelig for denne runden.</p>;
-	}
+	const currentQuestion = currentGame.questions?.[currentGame.currentQuestionIndex];
 
-	// Range defaults to [0,100] if unspecified
+
 	const [minVal, maxVal] = currentQuestion.range || [0, 100];
 
 	// Calculate the fill percentage for the slider
@@ -271,6 +273,7 @@ const PlayerGameView = ({mockGame}) => {
 								type="checkbox"
 								id="useTextInput"
 								checked={useTextInput}
+								disabled={!canSubmit}
 								onChange={(e) => {
 									setUseTextInput(e.target.checked);
 									if (!e.target.checked) {
@@ -287,7 +290,6 @@ const PlayerGameView = ({mockGame}) => {
 						</label>
 					</div>
 
-					{/* Conditionally render text vs slider input */}
 					{useTextInput ? (
 						<div className="text-input">
 							<input
@@ -322,12 +324,9 @@ const PlayerGameView = ({mockGame}) => {
 					)}
 
 					<button onClick={handleSubmitGuess} disabled={!canSubmit}>
-						{canSubmit ? 'Send Inn Svar' : 'Du har svart!'}
+						{canSubmit ? 'Send Inn Svar' : 'Svar sendt!'}
 					</button>
-
-					<p>Spillere sender inn svar nå ...</p>
 					{error && <p className="error-message">{error}</p>}
-					{successMessage && <p className="success-message">{successMessage}</p>}
 				</div>
 			)}
 
@@ -344,7 +343,6 @@ const PlayerGameView = ({mockGame}) => {
 			)}
 		</div>
 	);
-
 };
 
 export default PlayerGameView;
