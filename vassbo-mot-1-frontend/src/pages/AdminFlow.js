@@ -1,4 +1,5 @@
-// vassbo-mot-1-frontend/src/pages/AdminFlow.js
+// src/pages/AdminFlow.js
+
 import React, {useContext, useState, useEffect, useRef} from 'react';
 import {useParams} from 'react-router-dom';
 import {GameContext} from '../context/GameContext';
@@ -9,20 +10,24 @@ import Leaderboard from './Leaderboard';
 import {io} from 'socket.io-client';
 import axios from 'axios';
 import '../components/AdminFlow.css';
+import {toast, ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AdminFlow = () => {
 	useEffect(() => {
 		const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
 		const socket = io(backendUrl);
 
-
 		socket.on('gameEnded', ({leaderboard}) => {
 			setPhase(4); // Go to final leaderboard phase
+			/*setSuccessMessage('Final leaderboard received.');*/
+			toast.success('Final leaderboard received.');
 			console.log('Final leaderboard received:', leaderboard);
 		});
 
 		return () => socket.disconnect(); // Cleanup on unmount
 	}, []);
+
 	const timerIdRef = useRef(null);
 	useEffect(() => {
 		const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001/api`;
@@ -32,6 +37,7 @@ const AdminFlow = () => {
 
 		return () => socket.disconnect(); // Clean up listener
 	}, []);
+
 	const {gameCode} = useParams();
 	const {games, startRound, setCorrectAnswer} = useContext(GameContext);
 
@@ -60,8 +66,14 @@ const AdminFlow = () => {
 
 					// Inform backend about phase change
 					setPhase(3); // Move Admin's UI to phase 3
+					/*setSuccessMessage('Moving to phase 3: Setting correct answer.');*/
+					toast.success('Moving to phase 3: Setting correct answer.');
 					axios.post('/api/game/updatePhase', {gameCode, phase: 3})
-						.catch(err => console.error('Error updating phase:', err));
+						.catch(err => {
+							console.error('Error updating phase:', err);
+							/*setError('Feil ved oppdatering av fase.');*/
+							toast.error('Feil ved oppdatering av fase.');
+						});
 
 					return 0;
 				}
@@ -74,10 +86,18 @@ const AdminFlow = () => {
 		clearInterval(timerIdRef.current); // Use the ref here
 		try {
 			setPhase(3);
+			/*setSuccessMessage('Moving to phase 3: Setting correct answer.');*/
+			toast.success('Moving to phase 3: Setting correct answer.');
 			axios.post('/api/game/updatePhase', {gameCode, phase: 3})
-				.catch(err => console.error('Error updating game phase:', err));
+				.catch(err => {
+					console.error('Error updating phase:', err);
+					/*setError('Feil ved oppdatering av fase.');*/
+					toast.error('Feil ved oppdatering av fase.');
+				});
 		} catch (err) {
 			console.error('Error:', err);
+			/*setError('Feil ved oppdatering av fase.');*/
+			toast.error('Feil ved oppdatering av fase.');
 		}
 	};
 
@@ -87,44 +107,53 @@ const AdminFlow = () => {
 			await startRound(gameCode); // Calls frontend API method
 			setPhase(2); // Switch phase to guessing
 			startTimer(30); // 30 seconds countdown
-			setError('');
+			/*setError('');*/
+			toast.dismiss(); // Optionally dismiss all toasts
 		} catch (err) {
-			setError(err.response?.data?.error || 'Feil ved start av runde.');
+			/*setError(err.response?.data?.error || 'Feil ved start av runde.');*/
+			const errorMessage = err.response?.data?.error || 'Feil ved start av runde.';
+			toast.error(errorMessage);
 		}
 	};
 
 	// 3) Admin skriver inn fasit
 	const handleSetCorrectAnswer = async () => {
 		if (!correctAnswer.trim()) {
-			setError('Riktig svar kan ikke være tomt.');
+			/*setError('Riktig svar kan ikke være tomt.');*/
+			toast.error('Riktig svar kan ikke være tomt.');
 			return;
 		}
 		try {
 			await setCorrectAnswer(gameCode, Number(correctAnswer));
 			setCorrectAnswerInput('');
 			setPhase(4); // Gå til leaderboard
-			setError('');
-			setSuccessMessage('Riktig svar satt og poeng beregnet.');
+			/*setSuccessMessage('Riktig svar satt og poeng beregnet.');*/
+			toast.success('Riktig svar satt og poeng beregnet.');
+			/*setError('');*/
+			toast.dismiss();
 		} catch (err) {
-			setError(err.response?.data?.error || 'Feil ved å sette riktig svar.');
-			setSuccessMessage('');
+			/*setError(err.response?.data?.error || 'Feil ved å sette riktig svar.');*/
+			const errorMessage = err.response?.data?.error || 'Feil ved å sette riktig svar.';
+			toast.error(errorMessage);
+			/*setSuccessMessage('');*/
+			toast.dismiss();
 		}
 	};
 
 	// 4) Admin ser leaderboard -> klikk "Neste spørsmål"
 	const handleNextQuestion = () => {
 		if (currentGame?.currentQuestionIndex >= currentGame.questions.length) {
-			setError('Ingen flere spørsmål igjen – spillet er ferdig.');
+			/*setError('Ingen flere spørsmål igjen – spillet er ferdig.');*/
+			toast.error('Ingen flere spørsmål igjen – spillet er ferdig.');
 			setPhase(4); // Ensure Leaderboard phase is triggered
 			return;
 		}
 
 		setPhase(1);
-		setError('');
-		setSuccessMessage('');
+		/*setError('');
+		setSuccessMessage('');*/
+		toast.dismiss();
 	};
-
-	// Render basert på fasen vi er i
 	if (!currentGame) return <p>Spill ikke funnet.</p>;
 
 	return (
@@ -164,9 +193,9 @@ const AdminFlow = () => {
 				/>
 			)}
 
-			{/* Feil og suksessmeldinger */}
-			{error && <p className="error-message">{error}</p>}
-			{successMessage && <p className="success-message">{successMessage}</p>}
+			{/*{error && <p className="error-message">{error}</p>}
+      {successMessage && <p className="success-message">{successMessage}</p>}*/}
+			<ToastContainer closeButton={false} autoClose={3000}/>
 		</div>
 	);
 };

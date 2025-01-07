@@ -24,10 +24,12 @@ const PlayerGameView = ({mockGame}) => {
 	const [deadline, setDeadline] = useState(null);
 	const [phase, setPhase] = useState(0);
 	const [isLoading, setIsLoading] = useState(true);
-	const [timeLeft, setTimeLeft] = useState(0);
 
 	// Retrieve the player name from session storage
 	const playerName = sessionStorage.getItem('playerName')?.trim();
+
+	// Helper function to calculate the midpoint
+	const calculateMidpoint = (min, max) => Math.floor((min + max) / 2);
 
 	// Fetch game data from backend or use mock data
 	const fetchGame = async () => {
@@ -46,6 +48,7 @@ const PlayerGameView = ({mockGame}) => {
 		}
 	};
 
+	// Fetch game data on component mount or when gameCode/mockGame changes
 	useEffect(() => {
 		if (!mockGame && !games[gameCode]) {
 			fetchGame();
@@ -88,7 +91,7 @@ const PlayerGameView = ({mockGame}) => {
 		}
 	}, [gameCode, mockGame, setGames]);
 
-	// Decide which phase to display
+	// Decide which phase to display and initialize guess
 	useEffect(() => {
 		if (isLoading) return;
 
@@ -106,34 +109,38 @@ const PlayerGameView = ({mockGame}) => {
 
 		if (currentGame.status === 'started') {
 			if (currentGame.roundActive && currentQuestion.range) {
-				// The question expects a numeric guess within a range
 				setPhase(2);
-				setCanSubmit(true);
-				setGuess(currentQuestion.range[0]); // Default to the min value
+
+				const userAlreadyGuessed = currentGame.answers?.[playerName] !== undefined;
+				setCanSubmit(!userAlreadyGuessed);
+
+				if (userAlreadyGuessed) {
+					setGuess(currentGame.answers[playerName]);
+				} else {
+					const [minVal, maxVal] = currentQuestion.range;
+					setGuess((prevGuess) => (prevGuess === null ? calculateMidpoint(minVal, maxVal) : prevGuess));
+				}
+
 				setError('');
 				setSuccessMessage('');
 
 				if (currentGame.roundStartedAt) {
-					const computedDeadline = currentGame.roundStartedAt + 300000;
+					const computedDeadline = currentGame.roundStartedAt + 30000; // 30 seconds
 					setDeadline(computedDeadline);
 				} else {
-					// Fallback if roundStartedAt is missing
-					setDeadline(Date.now() + 300000);
+					setDeadline(Date.now() + 30000); // 30 seconds
 				}
 			} else if (!currentGame.roundActive && currentGame.correctAnswer === null) {
-				// Waiting for the correct answer
 				setPhase(1);
 				setCanSubmit(false);
 				setDeadline(null);
 				setGuess(null);
 			} else if (!currentGame.roundActive && currentGame.correctAnswer !== null) {
-				// Round ended, correct answer is known
 				setPhase(3);
 				setCanSubmit(false);
 				setDeadline(null);
 				setGuess(null);
 			} else {
-				// Default: no active round or not started
 				setPhase(0);
 				setCanSubmit(false);
 				setDeadline(null);
@@ -146,7 +153,7 @@ const PlayerGameView = ({mockGame}) => {
 			setDeadline(null);
 			setGuess(null);
 		}
-	}, [isLoading, games, gameCode, mockGame, setGames]);
+	}, [isLoading, games, gameCode, mockGame, setGames, playerName]);
 
 	// Timer callback
 	const handleTimeUp = () => {
@@ -224,7 +231,6 @@ const PlayerGameView = ({mockGame}) => {
 	// Validate the current game
 	const currentGame = mockGame || games[gameCode];
 
-	// **Modified Condition Below**
 	// Display welcome message if the game hasn't started yet
 	if (!currentGame || currentGame.status !== 'started') {
 		return (
@@ -236,13 +242,10 @@ const PlayerGameView = ({mockGame}) => {
 	}
 
 	const currentQuestion = currentGame.questions?.[currentGame.currentQuestionIndex];
-
-
 	const [minVal, maxVal] = currentQuestion.range || [0, 100];
 
 	// Calculate the fill percentage for the slider
-	const fillPercent =
-		((Number(guess) || minVal) - minVal) / (maxVal - minVal) * 100;
+	const fillPercent = ((Number(guess) || calculateMidpoint(minVal, maxVal)) - minVal) / (maxVal - minVal) * 100;
 
 	return (
 		<div className="player-game-view">
@@ -276,14 +279,7 @@ const PlayerGameView = ({mockGame}) => {
 								disabled={!canSubmit}
 								onChange={(e) => {
 									setUseTextInput(e.target.checked);
-									if (!e.target.checked) {
-										// Switch back to slider: default guess to minVal if invalid
-										setGuess(minVal);
-										setError('');
-									} else {
-										// Switch to text: let user type
-										setGuess('');
-									}
+									// Do not reset guess when toggling input modes
 								}}
 							/>
 							<span className="checkmark"></span>
@@ -308,7 +304,7 @@ const PlayerGameView = ({mockGame}) => {
 								type="range"
 								min={minVal}
 								max={maxVal}
-								value={guess !== null ? guess : minVal}
+								value={guess !== null ? guess : calculateMidpoint(minVal, maxVal)}
 								onChange={(e) => {
 									const v = Number(e.target.value);
 									setGuess(v);
@@ -319,14 +315,16 @@ const PlayerGameView = ({mockGame}) => {
 								}}
 								aria-label="Guess Slider"
 							/>
-							<span>{guess !== null ? guess : minVal}</span>
+							<span>{guess !== null ? guess : calculateMidpoint(minVal, maxVal)}</span>
 						</div>
 					)}
 
 					<button onClick={handleSubmitGuess} disabled={!canSubmit}>
 						{canSubmit ? 'Send Inn Svar' : 'Svar sendt!'}
 					</button>
+
 					{error && <p className="error-message">{error}</p>}
+					{successMessage && <p className="success-message">{successMessage}</p>}
 				</div>
 			)}
 

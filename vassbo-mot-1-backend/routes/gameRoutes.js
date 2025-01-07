@@ -30,8 +30,8 @@ router.post('/submit-guess', gameController.submitGuess);
 
 // Route to update a question
 router.put('/games/:gameCode/questions/:index', gameController.updateQuestion);
-
-// Route to get game details
+// Route to update the game phase
+router.post('/game/updatePhase', gameController.updatePhase);
 router.get('/games/:gameCode', (req, res) => {
 	const {gameCode} = req.params;
 	const game = gameController.games[gameCode];

@@ -19,9 +19,9 @@ const GuessingPhase = ({question, timeLeft, game}) => {
 				{game?.players.map((player) => (
 					<li key={player.name} className="player-item">
 						<span className="player-name">{player.name}</span>:
-						<span className={`player-status ${game.guesses[player.name] ? 'sent' : 'waiting'}`}>
-                            {game.guesses[player.name] ? 'Gjetning sendt' : 'Venter ...'}
-                        </span>
+						<span className={`player-status ${game.answers[player.name] ? 'sent' : 'waiting'}`}>
+              {game.answers[player.name] ? 'Gjetning sendt' : 'Venter ...'}
+            </span>
 					</li>
 				))}
 			</ul>
