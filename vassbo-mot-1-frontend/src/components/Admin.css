@@ -42,11 +42,13 @@
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    transition: background-color 0.3s ease;
+
 }
 
 .admin-container button:hover {
-    background-color: #38B0A6; /* Darker Teal */
+    transition: background-color 0.3s ease;
+    background-color: var(--button-hover-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .questions-list {
@@ -77,7 +79,9 @@
 }
 
 .question-item button:hover {
+    transition: background-color 0.3s ease;
     background-color: var(--button-hover-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .edit-question input[type="text"],
@@ -89,7 +93,6 @@
     font-size: 0.9rem;
 }
 
-/* Parent container for input fields in add-question-section */
 .add-question-section {
     display: flex;
     flex-direction: column;

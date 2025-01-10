@@ -51,5 +51,7 @@
 }
 
 .leaderboard button:hover {
-    background-color: #38B0A6; /* Darker Teal */
+    background-color: var(--button-hover-color);
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }

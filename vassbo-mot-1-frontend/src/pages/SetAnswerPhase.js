@@ -10,6 +10,7 @@ const SetAnswerPhase = ({question, correctAnswer, setCorrectAnswer, onSetCorrect
 			<p><strong>Spørsmål:</strong> {question}</p>
 
 			<input
+				className={"answer-input"}
 				type="number"
 				placeholder="Riktig Svar"
 				value={correctAnswer}

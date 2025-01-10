@@ -1,5 +1,3 @@
-// vassbo-mot-1-backend/routes/gameRoutes.js
-
 const express = require('express');
 const router = express.Router();
 const gameController = require('../controllers/gameController');
@@ -7,7 +5,7 @@ const gameController = require('../controllers/gameController');
 // Route to create a new game
 router.post('/create-game', gameController.createGame);
 
-// Route to join an existing game
+// Route to join a game
 router.post('/join-game', gameController.joinGame);
 
 // Route to add a question to a game
@@ -30,18 +28,5 @@ router.post('/submit-guess', gameController.submitGuess);
 
 // Route to update a question
 router.put('/games/:gameCode/questions/:index', gameController.updateQuestion);
-// Route to update the game phase
-router.post('/game/updatePhase', gameController.updatePhase);
-router.get('/games/:gameCode', (req, res) => {
-	const {gameCode} = req.params;
-	const game = gameController.games[gameCode];
-
-	if (!game) {
-		console.error(`Game not found for gameCode: ${gameCode}`);
-		return res.status(404).json({error: 'Game not found.'});
-	}
-
-	res.json(game);
-});
 
 module.exports = router;

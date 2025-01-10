@@ -19,6 +19,10 @@
     margin-bottom: var(--spacing-md);
 }
 
+.player-game-view .updated-score p {
+    color: var(--secondary-color);
+}
+
 .player-game-view p {
     color: var(--text-color);
     margin-bottom: var(--spacing-md);
@@ -71,7 +75,6 @@
     z-index: 2;
 }
 
-/* Firefox Thumb as a Vertical Line */
 .slider-input input[type="range"]::-moz-range-thumb {
     height: 20px; /* Increased height for vertical line */
     width: 4px; /* Reduced width for vertical appearance */
@@ -84,7 +87,6 @@
     z-index: 2;
 }
 
-/* IE/Edge Thumb as a Vertical Line */
 .slider-input input[type="range"]::-ms-thumb {
     height: 20px; /* Increased height for vertical line */
     width: 4px; /* Reduced width for vertical appearance */
@@ -139,7 +141,7 @@
     cursor: not-allowed;
 }
 
-/* Displayed Number Under the Slider */
+
 .slider-input span {
     display: inline-block;
     margin-top: var(--spacing-sm);
@@ -155,11 +157,14 @@
 
 /* Larger Numeric Field, No Spin Buttons */
 .text-input input[type="number"] {
-    font-size: 1.2rem;
-    padding: 12px;
     width: 100%;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: var(--spacing-sm);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    transition: background-color 0.3s ease;
+    cursor: pointer;
     box-sizing: border-box;
     -webkit-appearance: none; /* Remove spin in Chrome/Safari */
     -moz-appearance: textfield; /* Remove spin in Firefox */
@@ -186,6 +191,8 @@
 
 .player-game-view button:hover {
     background-color: var(--button-hover-color);
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .player-game-view button:disabled {
@@ -193,7 +200,6 @@
     cursor: not-allowed;
 }
 
-/* ERROR & SUCCESS MESSAGES */
 .error-message {
     color: var(--error-color);
     margin-top: var(--spacing-sm);
@@ -206,7 +212,6 @@
     text-align: center;
 }
 
-/* TIMER STYLING */
 .timer {
     font-size: 1.2rem;
     font-weight: bold;
@@ -214,7 +219,6 @@
     margin-bottom: var(--spacing-md);
 }
 
-/* CUSTOM CHECKBOX STYLING */
 .custom-checkbox-container {
     display: flex;
     align-items: center;
@@ -252,11 +256,12 @@
     transform: rotate(0deg);
 }
 
+
 .custom-checkbox input:disabled ~ .checkmark {
-    background-color: #e0e0e0; /* Light gray background for disabled state */
-    border-color: #bdbdbd; /* Light gray border */
+    background-color: #e0e0e0;
+    border-color: #bdbdbd;
     cursor: not-allowed;
-    opacity: 0.6; /* Reduce opacity to indicate disabled state */
+    opacity: 0.6;
 }
 
 .custom-checkbox input:checked ~ .checkmark {
@@ -288,7 +293,6 @@
     opacity: 1;
 }
 
-/* Spin Animation */
 @keyframes spin {
     from {
         transform: rotate(0deg);
@@ -298,7 +302,6 @@
     }
 }
 
-/* Spin Reverse Animation */
 @keyframes spin-reverse {
     from {
         transform: rotate(360deg);
@@ -308,7 +311,6 @@
     }
 }
 
-/* Focus Animation */
 .custom-checkbox input:focus ~ .checkmark {
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.5);
 }

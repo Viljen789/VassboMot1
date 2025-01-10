@@ -24,6 +24,7 @@ const PlayerGameView = ({mockGame}) => {
 	const [deadline, setDeadline] = useState(null);
 	const [phase, setPhase] = useState(0);
 	const [isLoading, setIsLoading] = useState(true);
+	const [gameEnded, setGameEnded] = useState(false); // New state variable
 
 	// Retrieve the player name from session storage
 	const playerName = sessionStorage.getItem('playerName')?.trim();
@@ -87,6 +88,10 @@ const PlayerGameView = ({mockGame}) => {
 				}));
 			});
 
+			socket.on('gameEnded', () => {
+				setGameEnded(true); // Set gameEnded to true when the game ends
+			});
+
 			return () => socket.disconnect();
 		}
 	}, [gameCode, mockGame, setGames]);
@@ -109,7 +114,7 @@ const PlayerGameView = ({mockGame}) => {
 
 		if (currentGame.status === 'started') {
 			if (currentGame.roundActive && currentQuestion.range) {
-				setPhase(2);
+				setPhase(2); // Guessing Phase
 
 				const userAlreadyGuessed = currentGame.answers?.[playerName] !== undefined;
 				setCanSubmit(!userAlreadyGuessed);
@@ -131,17 +136,17 @@ const PlayerGameView = ({mockGame}) => {
 					setDeadline(Date.now() + 30000); // 30 seconds
 				}
 			} else if (!currentGame.roundActive && currentGame.correctAnswer === null) {
-				setPhase(1);
+				setPhase(1); // Waiting for Admin to Open Guessing
 				setCanSubmit(false);
 				setDeadline(null);
 				setGuess(null);
 			} else if (!currentGame.roundActive && currentGame.correctAnswer !== null) {
-				setPhase(3);
+				setPhase(3); // Computing Points
 				setCanSubmit(false);
 				setDeadline(null);
 				setGuess(null);
 			} else {
-				setPhase(0);
+				setPhase(0); // Fallback to Phase 0
 				setCanSubmit(false);
 				setDeadline(null);
 				setGuess(null);
@@ -157,7 +162,7 @@ const PlayerGameView = ({mockGame}) => {
 
 	// Timer callback
 	const handleTimeUp = () => {
-		setPhase(3);
+		setPhase(3); // Move to Computing Points
 		setCanSubmit(false);
 		setDeadline(null);
 	};
@@ -245,99 +250,116 @@ const PlayerGameView = ({mockGame}) => {
 	const [minVal, maxVal] = currentQuestion.range || [0, 100];
 
 	// Calculate the fill percentage for the slider
-	const fillPercent = ((Number(guess) || calculateMidpoint(minVal, maxVal)) - minVal) / (maxVal - minVal) * 100;
+	const fillPercent =
+		((Number(guess) || calculateMidpoint(minVal, maxVal)) - minVal) / (maxVal - minVal) * 100;
 
 	return (
 		<div className="player-game-view">
-			<h3>Nåværende Spørsmål:</h3>
-			<p>{currentQuestion.text}</p>
-
-			{phase === 0 && (
+			{gameEnded ? (
 				<div>
-					<p>Venter på at host skal starte spillet...</p>
+					<h2>Spillet er over!</h2>
+					<p>Bra jobba! Sjekk leaderboardet for å se om du er på pallen.</p>
 				</div>
-			)}
+			) : (
+				<>
+					<h3>Nåværende Spørsmål:</h3>
+					<p>{currentQuestion.text}</p>
 
-			{phase === 1 && (
-				<div>
-					<p>Venter på at admin skal åpne gjetting...</p>
-				</div>
-			)}
-
-			{phase === 2 && (
-				<div className="answer-section">
-					<Timer deadline={deadline} onTimeUp={handleTimeUp}/>
-					<div className="custom-checkbox-container">
-						<label htmlFor="useTextInput" style={{marginRight: '8px'}}>
-							Foretrekker tekst-input?
-						</label>
-						<label className="custom-checkbox">
-							<input
-								type="checkbox"
-								id="useTextInput"
-								checked={useTextInput}
-								disabled={!canSubmit}
-								onChange={(e) => {
-									setUseTextInput(e.target.checked);
-									// Do not reset guess when toggling input modes
-								}}
-							/>
-							<span className="checkmark"></span>
-						</label>
-					</div>
-
-					{useTextInput ? (
-						<div className="text-input">
-							<input
-								type="number"
-								min={minVal}
-								max={maxVal}
-								value={guess === null ? '' : guess}
-								onChange={(e) => handleTextInputChange(e, minVal, maxVal)}
-								disabled={!canSubmit}
-								placeholder={`Skriv et tall mellom ${minVal} og ${maxVal}`}
-							/>
-						</div>
-					) : (
-						<div className="slider-input">
-							<input
-								type="range"
-								min={minVal}
-								max={maxVal}
-								value={guess !== null ? guess : calculateMidpoint(minVal, maxVal)}
-								onChange={(e) => {
-									const v = Number(e.target.value);
-									setGuess(v);
-								}}
-								disabled={!canSubmit}
-								style={{
-									'--fill': `${fillPercent}%`,
-								}}
-								aria-label="Guess Slider"
-							/>
-							<span>{guess !== null ? guess : calculateMidpoint(minVal, maxVal)}</span>
+					{phase === 0 && (
+						<div>
+							<p>Venter på at host skal starte spillet...</p>
 						</div>
 					)}
 
-					<button onClick={handleSubmitGuess} disabled={!canSubmit}>
-						{canSubmit ? 'Send Inn Svar' : 'Svar sendt!'}
-					</button>
+					{phase === 1 && (
+						<div>
+							<p>Venter på at admin skal åpne gjetting...</p>
+						</div>
+					)}
 
-					{error && <p className="error-message">{error}</p>}
-					{successMessage && <p className="success-message">{successMessage}</p>}
-				</div>
-			)}
+					{phase === 2 && (
+						<div className="answer-section">
+							<Timer deadline={deadline} onTimeUp={handleTimeUp}/>
+							<div className="custom-checkbox-container">
+								<label htmlFor="useTextInput" style={{marginRight: '8px'}}>
+									Foretrekker tekst-input?
+								</label>
+								<label className="custom-checkbox">
+									<input
+										type="checkbox"
+										id="useTextInput"
+										checked={useTextInput}
+										disabled={!canSubmit}
+										onChange={(e) => {
+											setUseTextInput(e.target.checked);
+											// Do not reset guess when toggling input modes
+										}}
+									/>
+									<span className="checkmark"></span>
+								</label>
+							</div>
 
-			{phase === 3 && (
-				<div>
-					<p>Regner ut poeng...</p>
-				</div>
-			)}
+							{useTextInput ? (
+								<div className="text-input">
+									<input
+										type="number"
+										min={minVal}
+										max={maxVal}
+										value={guess === null ? '' : guess}
+										onChange={(e) => handleTextInputChange(e, minVal, maxVal)}
+										disabled={!canSubmit}
+										placeholder={`Skriv et tall mellom ${minVal} og ${maxVal}`}
+									/>
+								</div>
+							) : (
+								<div className="slider-input">
+									<input
+										type="range"
+										min={minVal}
+										max={maxVal}
+										value={guess !== null ? guess : calculateMidpoint(minVal, maxVal)}
+										onChange={(e) => {
+											const v = Number(e.target.value);
+											setGuess(v);
+										}}
+										disabled={!canSubmit}
+										style={{
+											background: `linear-gradient(
+												to right,
+												var(--primary-color) ${fillPercent}%,
+												#ccc ${fillPercent}%
+											)`,
+										}}
+										aria-label="Guess Slider"
+									/>
+									<span>{guess !== null ? guess : calculateMidpoint(minVal, maxVal)}</span>
+								</div>
+							)}
 
-			{phase === 4 && (
-				<div>
-					<p>Venter på neste spørsmål...</p>
-				</div>
+							<button onClick={handleSubmitGuess} disabled={!canSubmit}>
+								{canSubmit ? 'Send Inn Svar' : 'Svar sendt!'}
+							</button>
+
+							{error && <p className="error-message">{error}</p>}
+							{successMessage && <p className="success-message">{successMessage}</p>}
+						</div>
+					)}
+
+					{phase === 3 && (
+						<div>
+							<p>Regner ut poeng...</p>
+							<span className={"updated-score"}>
+							<p>+ {mockGame ? 10 : currentGame.player.newScoreç}</p>
+							</span>
+						</div>
+					)}
+
+					{phase === 4 && (
+						<div>
+							<p>Venter på neste spørsmål...</p>
+						</div>
+					)}
+				</>
 			)}
 		</div>
 	);

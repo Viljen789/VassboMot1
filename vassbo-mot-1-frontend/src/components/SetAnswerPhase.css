@@ -1,7 +1,7 @@
-/* src/components/SetAnswerPhase.css */
+@import '../styles/variables.css';
+
 
 .set-answer-phase {
-    background-color: var(--secondary-color);
     padding: 2rem;
     border-radius: var(--border-radius);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -21,32 +21,47 @@
     font-size: 1.1rem;
 }
 
-.set-answer-phase input {
+.answer-input {
     width: 100%;
-    max-width: 300px;
-    margin: 0 auto 1.5rem;
-    background-color: var(--input-background);
-    color: var(--input-text);
-    border: 1px solid var(--input-border);
+    margin-bottom: var(--spacing-md);
+}
+
+.answer-input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    box-sizing: border-box;
+    -webkit-appearance: none; /* Remove spin in Chrome/Safari */
+    -moz-appearance: textfield; /* Remove spin in Firefox */
+}
+
+.answer-input input[type="number"]::-webkit-inner-spin-button,
+.answer-input input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .set-answer-phase button {
-    padding: 0.75rem 1.5rem;
+    padding: var(--spacing-sm) var(--spacing-md);
     font-size: 1rem;
-    border-radius: var(--border-radius);
-    background-color: var(--primary-color);
-    color: var(--secondary-color);
+    color: #ffffff;
+    background-color: var(--secondary-color);
     border: none;
-    transition: background-color var(--transition-speed), transform var(--transition-speed);
+    border-radius: var(--border-radius);
     cursor: pointer;
 }
 
 .set-answer-phase button:hover {
+    transition: background-color 0.3s ease;
     background-color: var(--button-hover-color);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .set-answer-phase {
         padding: 1rem;

@@ -21,7 +21,9 @@ button {
 }
 
 button:hover {
-    background-color: darken(var(--primary-color), 10%);
+    background-color: var(--button-hover-color);
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 input, button {

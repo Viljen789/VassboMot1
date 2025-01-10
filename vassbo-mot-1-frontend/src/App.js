@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import GuessingPhaseTest from "./pages/GuessingPhaseTest";
 import PlayerViewTest from './pages/PlayerViewTest';
 import PlayerGameView from "./pages/PlayerGameView";
+import AdminFlowTest from "./pages/AdminFlowTest";
 
 function App() {
 	return (
@@ -23,6 +24,8 @@ function App() {
 				{/* <Route path="/game" element={<GameFront/>}/> */}
 				<Route path="/test/guessing-phase" element={<GuessingPhaseTest/>}/>
 				<Route path="/test/player-view-test" element={<PlayerViewTest/>}/>
+				<Route path="/admin-test" element={<AdminFlowTest/>}/>
+
 			</Routes>
 		</Router>
 	);

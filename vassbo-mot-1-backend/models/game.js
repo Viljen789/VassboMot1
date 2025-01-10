@@ -60,13 +60,11 @@ class Game {
 	}
 
 	calculateScores() {
-		// Implement your scoring logic here
-		// Example:
 		this.players.forEach(player => {
 			const guess = this.answers[player.name];
 			if (guess !== undefined) {
-				// Simple scoring: closer to correct answer, higher score
-				player.score += Math.max(0, 100 - Math.abs(this.correctAnswer - guess) * 10);
+				player.newScore = Math.max(0, 100 - Math.abs(this.correctAnswer - guess) * 10);
+				player.score += player.newScore;
 			}
 		});
 	}

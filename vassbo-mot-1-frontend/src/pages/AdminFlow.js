@@ -20,7 +20,6 @@ const AdminFlow = () => {
 
 		socket.on('gameEnded', ({leaderboard}) => {
 			setPhase(4); // Go to final leaderboard phase
-			/*setSuccessMessage('Final leaderboard received.');*/
 			toast.success('Final leaderboard received.');
 			console.log('Final leaderboard received:', leaderboard);
 		});
@@ -42,12 +41,7 @@ const AdminFlow = () => {
 	const {games, startRound, setCorrectAnswer} = useContext(GameContext);
 
 	const [phase, setPhase] = useState(1);
-	// Fase 1 = Presentasjon av spm
-	// Fase 2 = 30 sek gjetting
-	// Fase 3 = Admin skriver inn fasit
-	// Fase 4 = Viser leaderboard
-
-	const [timeLeft, setTimeLeft] = useState(0);    // For 30 sek timer
+	const [timeLeft, setTimeLeft] = useState(0);    // For 30 sec timer
 	const [correctAnswer, setCorrectAnswerInput] = useState('');
 	const [error, setError] = useState('');
 	const [successMessage, setSuccessMessage] = useState('');
@@ -56,7 +50,7 @@ const AdminFlow = () => {
 	const currentQuestionIndex = currentGame?.currentQuestionIndex ?? 0;
 	const currentQuestion = currentGame?.questions?.[currentQuestionIndex] || null;
 
-	// Hjelpefunksjon for å starte timer (fase 2)
+	// Helper function to start timer (phase 2)
 	const startTimer = (seconds) => {
 		setTimeLeft(seconds);
 		timerIdRef.current = setInterval(() => { // Use the ref here
@@ -66,12 +60,10 @@ const AdminFlow = () => {
 
 					// Inform backend about phase change
 					setPhase(3); // Move Admin's UI to phase 3
-					/*setSuccessMessage('Moving to phase 3: Setting correct answer.');*/
 					toast.success('Moving to phase 3: Setting correct answer.');
 					axios.post('/api/game/updatePhase', {gameCode, phase: 3})
 						.catch(err => {
 							console.error('Error updating phase:', err);
-							/*setError('Feil ved oppdatering av fase.');*/
 							toast.error('Feil ved oppdatering av fase.');
 						});
 
@@ -86,75 +78,78 @@ const AdminFlow = () => {
 		clearInterval(timerIdRef.current); // Use the ref here
 		try {
 			setPhase(3);
-			/*setSuccessMessage('Moving to phase 3: Setting correct answer.');*/
 			toast.success('Moving to phase 3: Setting correct answer.');
 			axios.post('/api/game/updatePhase', {gameCode, phase: 3})
 				.catch(err => {
 					console.error('Error updating phase:', err);
-					/*setError('Feil ved oppdatering av fase.');*/
 					toast.error('Feil ved oppdatering av fase.');
 				});
 		} catch (err) {
 			console.error('Error:', err);
-			/*setError('Feil ved oppdatering av fase.');*/
 			toast.error('Feil ved oppdatering av fase.');
 		}
 	};
 
-	// 1) Admin presenterer spm -> klikk "Åpne gjetting"
+	// 1) Admin presents question -> click "Open Guessing"
 	const handleOpenGuessing = async () => {
 		try {
 			await startRound(gameCode); // Calls frontend API method
 			setPhase(2); // Switch phase to guessing
 			startTimer(30); // 30 seconds countdown
-			/*setError('');*/
 			toast.dismiss(); // Optionally dismiss all toasts
+
+			// Inform backend about phase change
+			axios.post('/api/game/updatePhase', {gameCode, phase: 2})
+				.catch(err => {
+					console.error('Error updating phase:', err);
+					toast.error('Feil ved oppdatering av fase.');
+				});
 		} catch (err) {
-			/*setError(err.response?.data?.error || 'Feil ved start av runde.');*/
 			const errorMessage = err.response?.data?.error || 'Feil ved start av runde.';
 			toast.error(errorMessage);
 		}
 	};
 
-	// 3) Admin skriver inn fasit
+	// 3) Admin sets correct answer
 	const handleSetCorrectAnswer = async () => {
 		if (!correctAnswer.trim()) {
-			/*setError('Riktig svar kan ikke være tomt.');*/
 			toast.error('Riktig svar kan ikke være tomt.');
 			return;
 		}
 		try {
 			await setCorrectAnswer(gameCode, Number(correctAnswer));
 			setCorrectAnswerInput('');
-			setPhase(4); // Gå til leaderboard
-			/*setSuccessMessage('Riktig svar satt og poeng beregnet.');*/
+			setPhase(4); // Go to leaderboard
 			toast.success('Riktig svar satt og poeng beregnet.');
-			/*setError('');*/
 			toast.dismiss();
 		} catch (err) {
-			/*setError(err.response?.data?.error || 'Feil ved å sette riktig svar.');*/
 			const errorMessage = err.response?.data?.error || 'Feil ved å sette riktig svar.';
 			toast.error(errorMessage);
-			/*setSuccessMessage('');*/
 			toast.dismiss();
 		}
 	};
 
-	// 4) Admin ser leaderboard -> klikk "Neste spørsmål"
+	// 4) Admin sees leaderboard -> click "Next Question"
 	const handleNextQuestion = () => {
-		if (currentGame?.currentQuestionIndex >= currentGame.questions.length) {
-			/*setError('Ingen flere spørsmål igjen – spillet er ferdig.');*/
+		const currentGame = games[gameCode];
+		if (!currentGame) {
+			toast.error('Spill ikke funnet.');
+			return;
+		}
+
+		if (currentGame.currentQuestionIndex >= currentGame.questions.length - 1) {
 			toast.error('Ingen flere spørsmål igjen – spillet er ferdig.');
 			setPhase(4); // Ensure Leaderboard phase is triggered
 			return;
 		}
 
 		setPhase(1);
-		/*setError('');
-		setSuccessMessage('');*/
 		toast.dismiss();
 	};
-	if (!currentGame) return <p>Spill ikke funnet.</p>;
+
+	if (!currentGame) {
+		return <div>Loading...</div>;
+	}
 
 	return (
 		<div className="admin-flow-container">
@@ -189,12 +184,10 @@ const AdminFlow = () => {
 				<Leaderboard
 					game={currentGame}
 					onNextQuestion={handleNextQuestion}
-					isFinal={currentGame?.currentQuestionIndex >= currentGame.questions.length}
+					isFinal={currentGame.currentQuestionIndex >= currentGame.questions.length - 1}
 				/>
 			)}
 
-			{/*{error && <p className="error-message">{error}</p>}
-      {successMessage && <p className="success-message">{successMessage}</p>}*/}
 			<ToastContainer closeButton={false} autoClose={3000}/>
 		</div>
 	);
