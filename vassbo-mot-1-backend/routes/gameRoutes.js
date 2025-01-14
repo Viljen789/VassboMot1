@@ -1,32 +1,43 @@
+// vassbo-mot-1-backend/routes/gameRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const gameController = require('../controllers/gameController');
 
-// Route to create a new game
+// **GET** /api/games/:gameCode - Fetch a game by gameCode
+router.get('/games/:gameCode', gameController.getGame);
+
+// **POST** /api/create-game - Create a new game
 router.post('/create-game', gameController.createGame);
 
-// Route to join a game
+// **POST** /api/join-game - Join a game
 router.post('/join-game', gameController.joinGame);
 
-// Route to add a question to a game
+// **POST** /api/add-question - Add a question to a game
 router.post('/add-question', gameController.addQuestion);
 
-// Route to start a game
+// **POST** /api/start-game - Start a game
 router.post('/start-game', gameController.startGame);
 
-// Route to validate a game code
-router.get('/validateGameCode/:gameCode', gameController.validateGameCode);
+// **POST** /api/open-guessing - Open the guessing phase
+router.post('/open-guessing', gameController.openGuessing);
 
-// Route to start a round
-router.post('/start-round', gameController.startRound);
-
-// Route to set the correct answer
+// **POST** /api/set-correct-answer - Set the correct answer
 router.post('/set-correct-answer', gameController.setCorrectAnswer);
 
-// Route to submit a guess
+// **POST** /api/submit-guess - Submit a guess
 router.post('/submit-guess', gameController.submitGuess);
 
-// Route to update a question
+// **POST** /api/updatePhase - Update phase
+router.post('/updatePhase', gameController.updatePhase);
+
+// **POST** /api/set-next-phase - Set the next phase
+router.post('/set-next-phase', gameController.setNextPhase);
+
+// **PUT** /api/games/:gameCode/questions/:index - Update a specific question
 router.put('/games/:gameCode/questions/:index', gameController.updateQuestion);
+
+// **GET** /api/validateGameCode/:gameCode - Validate game code
+router.get('/validateGameCode/:gameCode', gameController.validateGameCode);
 
 module.exports = router;

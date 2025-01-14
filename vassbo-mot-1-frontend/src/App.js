@@ -12,23 +12,20 @@ import PlayerGameView from "./pages/PlayerGameView";
 import AdminFlowTest from "./pages/AdminFlowTest";
 
 function App() {
-	return (
-		<Router>
-			<Routes>
-				<Route path="/" element={<Home/>}/>
-				<Route path="/admin" element={<Admin/>}/>
-				<Route path="/register" element={<Register/>}/>
-				<Route path="/admin/flow/:gameCode" element={<AdminFlow/>}/>
-				<Route path="/game/:gameCode" element={<PlayerGameView/>}/>
-				{/* Remove the following route if GameFront is no longer needed */}
-				{/* <Route path="/game" element={<GameFront/>}/> */}
-				<Route path="/test/guessing-phase" element={<GuessingPhaseTest/>}/>
-				<Route path="/test/player-view-test" element={<PlayerViewTest/>}/>
-				<Route path="/admin-test" element={<AdminFlowTest/>}/>
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<Home/>}/>
+                <Route path="/admin" element={<Admin/>}/>
+                <Route path="/register" element={<Register/>}/>
+                <Route path="/admin/flow/:gameCode" element={<AdminFlow/>}/>
+                <Route path="/game/:gameCode" element={<PlayerGameView/>}/>
+                <Route path="/test/player-view-test" element={<PlayerViewTest/>}/>
+                <Route path="/admin-test" element={<AdminFlowTest/>}/>
 
-			</Routes>
-		</Router>
-	);
+            </Routes>
+        </Router>
+    );
 }
 
 export default App;

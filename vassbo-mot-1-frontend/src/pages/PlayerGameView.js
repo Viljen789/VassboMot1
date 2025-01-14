@@ -3,366 +3,388 @@
 import React, {useContext, useState, useEffect} from 'react';
 import {useParams} from 'react-router-dom';
 import {GameContext} from '../context/GameContext';
-import Timer from './Timer';
+import Timer from '../components/Timer';
 import {io} from 'socket.io-client';
 import axios from 'axios';
-import '../components/PlayerGameView.css';
+import '../styles/PlayerGameView.css';
+import CountUp from 'react-countup';
+import {toast, ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const PlayerGameView = ({mockGame}) => {
-	const {gameCode} = useParams();
-	const {games, submitGuess, setGames} = useContext(GameContext);
+const PlayerGameView = ({gameCode: propGameCode, mockGame}) => {
+    // Bruk propGameCode hvis tilgjengelig, ellers bruk gameCode fra URL-parametere
+    const {gameCode: paramGameCode} = useParams();
+    const gameCode = propGameCode || paramGameCode;
 
-	// Toggle between slider input or text input
-	const [useTextInput, setUseTextInput] = useState(false);
+    const {games, submitGuess, setGames} = useContext(GameContext);
 
-	// Store the user’s guess (numeric value or empty string)
-	const [guess, setGuess] = useState(null);
+    const [useTextInput, setUseTextInput] = useState(false);
+    const [guess, setGuess] = useState(null);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [canSubmit, setCanSubmit] = useState(false);
+    const [deadline, setDeadline] = useState(null);
+    const [phase, setPhase] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [gameEnded, setGameEnded] = useState(false);
 
-	const [error, setError] = useState('');
-	const [successMessage, setSuccessMessage] = useState('');
-	const [canSubmit, setCanSubmit] = useState(false);
-	const [deadline, setDeadline] = useState(null);
-	const [phase, setPhase] = useState(0);
-	const [isLoading, setIsLoading] = useState(true);
-	const [gameEnded, setGameEnded] = useState(false); // New state variable
+    const playerName = sessionStorage.getItem('playerName')?.trim();
 
-	// Retrieve the player name from session storage
-	const playerName = sessionStorage.getItem('playerName')?.trim();
+    const calculateMidpoint = (min, max) => Math.floor((min + max) / 2);
 
-	// Helper function to calculate the midpoint
-	const calculateMidpoint = (min, max) => Math.floor((min + max) / 2);
+    const fetchGame = async () => {
+        try {
+            const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+            const response = await axios.get(`${backendUrl}/api/games/${gameCode}`);
+            setGames((prev) => ({
+                ...prev,
+                [gameCode]: response.data,
+            }));
+        } catch (err) {
+            toast.error(`Fant ikke spillet med kode ${gameCode}.`);
+            console.error('Feil ved henting av spill:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-	// Fetch game data from backend or use mock data
-	const fetchGame = async () => {
-		try {
-			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
-			const response = await axios.get(`${backendUrl}/games/${gameCode}`);
-			setGames((prev) => ({
-				...prev,
-				[gameCode]: response.data,
-			}));
-		} catch (err) {
-			console.error('Error fetching game:', err);
-			setError(`Fant ikke spillet med kode ${gameCode}.`);
-		} finally {
-			setIsLoading(false);
-		}
-	};
+    useEffect(() => {
+        if (!mockGame && !games[gameCode]) {
+            fetchGame();
+        } else {
+            setIsLoading(false);
+        }
+    }, [gameCode, mockGame]);
 
-	// Fetch game data on component mount or when gameCode/mockGame changes
-	useEffect(() => {
-		if (!mockGame && !games[gameCode]) {
-			fetchGame();
-		} else {
-			setIsLoading(false);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [gameCode, mockGame]);
+    useEffect(() => {
+        if (mockGame) {
+            setGames((prev) => ({
+                ...prev,
+                [gameCode]: mockGame,
+            }));
+            setIsLoading(false);
+        }
+    }, [mockGame, gameCode, setGames]);
 
-	// If mock data is provided, set it directly
-	useEffect(() => {
-		if (mockGame) {
-			setGames((prev) => ({
-				...prev,
-				[gameCode]: mockGame,
-			}));
-			setIsLoading(false);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [mockGame]);
+    useEffect(() => {
+        if (!mockGame) {
+            const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
+            const socket = io(backendUrl);
 
-	// Handle Socket.IO connection (when not using mock data)
-	useEffect(() => {
-		if (!mockGame) {
-			const backendUrl = `${window.location.protocol}//${window.location.hostname}:3001`;
-			const socket = io(backendUrl);
+            socket.on('updateGame', (updatedGame) => {
+                setGames((prev) => ({
+                    ...prev,
+                    [updatedGame.gameCode]: updatedGame,
+                }));
+            });
 
-			socket.on('updatePhase', ({phase}) => setPhase(phase));
-			socket.emit('joinRoom', gameCode);
+            socket.on('updatePhase', ({phase: updatedPhase, gameCode: updatedGameCode}) => {
+                setGames((prevGames) => ({
+                    ...prevGames,
+                    [updatedGameCode]: {
+                        ...prevGames[updatedGameCode],
+                        phase: updatedPhase,
+                    },
+                }));
+            });
 
-			socket.on('updateGame', (updatedGame) => {
-				console.log('Received updated game state:', updatedGame);
-				setGames((prev) => ({
-					...prev,
-					[gameCode]: updatedGame,
-				}));
-			});
+            socket.on('gameEnded', ({leaderboard, gameCode: endedGameCode}) => {
+                setGames((prevGames) => ({
+                    ...prevGames,
+                    [endedGameCode]: {
+                        ...prevGames[endedGameCode],
+                        phase: 5,
+                        leaderboard,
+                    },
+                }));
+                setGameEnded(true);
+            });
 
-			socket.on('gameEnded', () => {
-				setGameEnded(true); // Set gameEnded to true when the game ends
-			});
+            socket.emit('joinRoom', gameCode);
 
-			return () => socket.disconnect();
-		}
-	}, [gameCode, mockGame, setGames]);
+            return () => socket.disconnect();
+        }
+    }, [gameCode, mockGame, setGames]);
 
-	// Decide which phase to display and initialize guess
-	useEffect(() => {
-		if (isLoading) return;
+    useEffect(() => {
+        if (isLoading) return;
 
-		const currentGame = mockGame || games[gameCode];
-		if (!currentGame) {
-			setPhase(0);
-			return;
-		}
+        const currentGame = mockGame || games[gameCode];
+        if (!currentGame) {
+            setPhase(0);
+            return;
+        }
 
-		const currentQuestion = currentGame.questions?.[currentGame.currentQuestionIndex] || null;
-		if (!currentQuestion) {
-			setPhase(0);
-			return;
-		}
+        const currentQuestion = currentGame.questions?.[currentGame.currentQuestionIndex] || null;
+        if (!currentQuestion) {
+            setPhase(0);
+            return;
+        }
 
-		if (currentGame.status === 'started') {
-			if (currentGame.roundActive && currentQuestion.range) {
-				setPhase(2); // Guessing Phase
+        if (currentGame.status === 'started') {
+            // Sjekk om 'phase' finnes og er et gyldig tall
+            if (typeof currentGame.phase === 'number') {
+                setPhase(currentGame.phase);
+                console.log(`Fase satt til: ${currentGame.phase}`); // Logg lagt til
 
-				const userAlreadyGuessed = currentGame.answers?.[playerName] !== undefined;
-				setCanSubmit(!userAlreadyGuessed);
+                if (currentGame.phase === 2) {
+                    const userAlreadyGuessed = currentGame.answers?.[playerName] !== undefined;
+                    setCanSubmit(!userAlreadyGuessed);
 
-				if (userAlreadyGuessed) {
-					setGuess(currentGame.answers[playerName]);
-				} else {
-					const [minVal, maxVal] = currentQuestion.range;
-					setGuess((prevGuess) => (prevGuess === null ? calculateMidpoint(minVal, maxVal) : prevGuess));
-				}
+                    if (userAlreadyGuessed) {
+                        setGuess(currentGame.answers[playerName]);
+                    } else {
+                        const {rangeMin, rangeMax} = currentQuestion;
+                        setGuess((prevGuess) => (prevGuess === null ? calculateMidpoint(rangeMin, rangeMax) : prevGuess));
+                    }
 
-				setError('');
-				setSuccessMessage('');
+                    if (currentGame.roundStartedAt) {
+                        const computedDeadline = currentGame.roundStartedAt + 30000; // 30 sekunder
+                        setDeadline(computedDeadline);
+                    } else {
+                        setDeadline(Date.now() + 30000);
+                    }
+                } else if (currentGame.phase === 1) {
+                    setCanSubmit(false);
+                    setDeadline(null);
+                    setGuess(null);
+                } else if (currentGame.phase === 3) {
+                    setCanSubmit(false);
+                    setDeadline(null);
+                    setGuess(null);
+                } else if (currentGame.phase === 4) {
+                    setCanSubmit(false);
+                    setDeadline(null);
+                    setGuess(null);
+                } else if (currentGame.phase === 5) {
+                    setGameEnded(true);
+                } else {
+                    setCanSubmit(false);
+                    setDeadline(null);
+                    setGuess(null);
+                }
+            } else {
+                // Hvis 'phase' mangler eller er ugyldig, sett til fase 0
+                setPhase(0);
+                console.log(`Fase er udefinert eller ugyldig, standardiserer til: 0`); // Logg lagt til
+                setCanSubmit(false);
+                setDeadline(null);
+                setGuess(null);
+            }
+        } else {
+            setPhase(0);
+            console.log(`Spillstatus ikke startet, standardiserer til: 0`); // Logg lagt til
+            setCanSubmit(false);
+            setDeadline(null);
+            setGuess(null);
+        }
+    }, [isLoading, games, gameCode, mockGame, setGames, playerName]);
 
-				if (currentGame.roundStartedAt) {
-					const computedDeadline = currentGame.roundStartedAt + 30000; // 30 seconds
-					setDeadline(computedDeadline);
-				} else {
-					setDeadline(Date.now() + 30000); // 30 seconds
-				}
-			} else if (!currentGame.roundActive && currentGame.correctAnswer === null) {
-				setPhase(1); // Waiting for Admin to Open Guessing
-				setCanSubmit(false);
-				setDeadline(null);
-				setGuess(null);
-			} else if (!currentGame.roundActive && currentGame.correctAnswer !== null) {
-				setPhase(3); // Computing Points
-				setCanSubmit(false);
-				setDeadline(null);
-				setGuess(null);
-			} else {
-				setPhase(0); // Fallback to Phase 0
-				setCanSubmit(false);
-				setDeadline(null);
-				setGuess(null);
-			}
-		} else {
-			// Game not started
-			setPhase(0);
-			setCanSubmit(false);
-			setDeadline(null);
-			setGuess(null);
-		}
-	}, [isLoading, games, gameCode, mockGame, setGames, playerName]);
+    const handleTimeUp = () => {
+        setPhase(3);
+        setCanSubmit(false);
+        setDeadline(null);
+    };
 
-	// Timer callback
-	const handleTimeUp = () => {
-		setPhase(3); // Move to Computing Points
-		setCanSubmit(false);
-		setDeadline(null);
-	};
+    const handleTextInputChange = (e, min, max) => {
+        const val = e.target.value;
 
-	// Handle text input changes (only numeric, clamped within range)
-	const handleTextInputChange = (e, min, max) => {
-		const val = e.target.value;
+        if (val === '') {
+            setGuess('');
+            return;
+        }
 
-		// If empty, let the user clear the field
-		if (val === '') {
-			setGuess('');
-			setError('');
-			return;
-		}
+        const numericVal = Number(val);
+        if (isNaN(numericVal)) {
+            toast.error('Inndata må være et tall.');
+            return;
+        }
 
-		// Convert to number
-		const numericVal = Number(val);
-		if (isNaN(numericVal)) {
-			setError('Input må være et tall.');
-			return;
-		}
+        const clampedVal = Math.min(Math.max(numericVal, min), max);
+        if (clampedVal !== numericVal) {
+            toast.error(`Inndata må være mellom ${min} og ${max}.`);
+        }
+        setGuess(clampedVal);
+    };
 
-		// Clamp value within [min, max]
-		const clampedVal = Math.min(Math.max(numericVal, min), max);
-		if (clampedVal !== numericVal) {
-			setError(`Input må være mellom ${min} og ${max}.`);
-		} else {
-			setError('');
-		}
-		setGuess(clampedVal);
-	};
+    const handleSubmitGuess = async () => {
+        if (!playerName) {
+            toast.error('Spiller er ikke definert.');
+            return;
+        }
+        if (guess === null || guess === '') {
+            toast.error('Svar kan ikke være tomt.');
+            return;
+        }
 
-	// Submit the guess
-	const handleSubmitGuess = async () => {
-		if (!playerName) {
-			setError('Spiller ikke definert.');
-			return;
-		}
-		if (guess === null || guess === '') {
-			setError('Svar kan ikke være tomt.');
-			return;
-		}
+        const trimmedPlayerName = playerName.trim();
+        if (!trimmedPlayerName) {
+            toast.error('Ugyldig spillernavn.');
+            return;
+        }
 
-		const trimmedPlayerName = playerName.trim();
-		if (!trimmedPlayerName) {
-			setError('Ugyldig spiller navn.');
-			return;
-		}
+        try {
+            await submitGuess(gameCode, trimmedPlayerName, guess);
+            setSuccessMessage('Svar sendt!');
+            setCanSubmit(false);
+        } catch (err) {
+            console.error('Feil ved innsending av svar:', err);
+            if (err.message) {
+                toast.error(err.message);
+            } else {
+                toast.error('Feil ved innsending av svar.');
+            }
+            setSuccessMessage('');
+        }
+    };
 
-		try {
-			await submitGuess(gameCode, trimmedPlayerName, guess);
-			setError('');
-			setSuccessMessage('Svar sendt inn!');
-			setCanSubmit(false);
-		} catch (err) {
-			console.error('Error submitting guess:', err);
-			if (err.response?.data?.error) {
-				setError(err.response.data.error);
-			} else {
-				setError('Feil ved innsending av svar.');
-			}
-			setSuccessMessage('');
-		}
-	};
+    if (isLoading) {
+        return (
+            <div className="player-game-view">
+                <ToastContainer/>
+                <p>Laster spilldata...</p>
+            </div>
+        );
+    }
 
-	// Loading state
-	if (isLoading) {
-		return <p>Laster spilldata...</p>;
-	}
+    const currentGame = mockGame || games[gameCode];
 
-	// Validate the current game
-	const currentGame = mockGame || games[gameCode];
+    if (!currentGame || currentGame.status !== 'started') {
+        return (
+            <div className="player-game-view">
+                <ToastContainer/>
+                <h2>Velkommen {playerName}!</h2>
+                <p>Vennligst vent mens spillet settes opp.</p>
+            </div>
+        );
+    }
 
-	// Display welcome message if the game hasn't started yet
-	if (!currentGame || currentGame.status !== 'started') {
-		return (
-			<div className="player-game-view">
-				<h2>Velkommen {playerName}!</h2>
-				<p>Vennligst vent mens spillet settes opp.</p>
-			</div>
-		);
-	}
+    const currentQuestion = currentGame.questions?.[currentGame.currentQuestionIndex];
+    const {rangeMin: minVal, rangeMax: maxVal} = currentQuestion || {};
 
-	const currentQuestion = currentGame.questions?.[currentGame.currentQuestionIndex];
-	const [minVal, maxVal] = currentQuestion.range || [0, 100];
+    const fillPercent = ((Number(guess) || calculateMidpoint(minVal, maxVal)) - minVal) / (maxVal - minVal) * 100;
 
-	// Calculate the fill percentage for the slider
-	const fillPercent =
-		((Number(guess) || calculateMidpoint(minVal, maxVal)) - minVal) / (maxVal - minVal) * 100;
+    return (
+        <div className="player-game-view">
+            <ToastContainer/>
+            {gameEnded ? (
+                <div>
+                    <h2>Spillet er over!</h2>
+                    <p>Flott jobbet! Sjekk resultatlister for å se om du nådde podiet.</p>
+                </div>
+            ) : (
+                <>
+                    <h3>Nåværende spørsmål:</h3>
+                    <p>{currentQuestion.text}</p>
 
-	return (
-		<div className="player-game-view">
-			{gameEnded ? (
-				<div>
-					<h2>Spillet er over!</h2>
-					<p>Bra jobba! Sjekk leaderboardet for å se om du er på pallen.</p>
-				</div>
-			) : (
-				<>
-					<h3>Nåværende Spørsmål:</h3>
-					<p>{currentQuestion.text}</p>
+                    {phase === 0 && (
+                        <div>
+                            <p>Venter på at verten skal starte spillet...</p>
+                        </div>
+                    )}
 
-					{phase === 0 && (
-						<div>
-							<p>Venter på at host skal starte spillet...</p>
-						</div>
-					)}
+                    {phase === 1 && (
+                        <div>
+                            <p>Venter på at admin åpner for gjettninger...</p>
+                        </div>
+                    )}
 
-					{phase === 1 && (
-						<div>
-							<p>Venter på at admin skal åpne gjetting...</p>
-						</div>
-					)}
+                    {phase === 2 && (
+                        <div className="answer-section">
+                            <Timer deadline={deadline} onTimeUp={handleTimeUp}/>
+                            <div className="custom-checkbox-container">
+                                <label htmlFor="useTextInput" style={{marginRight: '8px'}}>
+                                    Foretrekker tekstinndata?
+                                </label>
+                                <label className="custom-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        id="useTextInput"
+                                        checked={useTextInput}
+                                        disabled={!canSubmit}
+                                        onChange={(e) => {
+                                            setUseTextInput(e.target.checked);
+                                        }}
+                                    />
+                                    <span className="checkmark"></span>
+                                </label>
+                            </div>
 
-					{phase === 2 && (
-						<div className="answer-section">
-							<Timer deadline={deadline} onTimeUp={handleTimeUp}/>
-							<div className="custom-checkbox-container">
-								<label htmlFor="useTextInput" style={{marginRight: '8px'}}>
-									Foretrekker tekst-input?
-								</label>
-								<label className="custom-checkbox">
-									<input
-										type="checkbox"
-										id="useTextInput"
-										checked={useTextInput}
-										disabled={!canSubmit}
-										onChange={(e) => {
-											setUseTextInput(e.target.checked);
-											// Do not reset guess when toggling input modes
-										}}
-									/>
-									<span className="checkmark"></span>
-								</label>
-							</div>
+                            {useTextInput ? (
+                                <div className="text-input">
+                                    <input
+                                        type="number"
+                                        min={minVal}
+                                        max={maxVal}
+                                        value={guess === null ? '' : guess}
+                                        onChange={(e) => handleTextInputChange(e, minVal, maxVal)}
+                                        disabled={!canSubmit}
+                                        placeholder={`Skriv inn et tall mellom ${minVal} og ${maxVal}`}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="slider-input">
+                                    <input
+                                        type="range"
+                                        min={minVal}
+                                        max={maxVal}
+                                        value={guess !== null ? guess : calculateMidpoint(minVal, maxVal)}
+                                        onChange={(e) => {
+                                            const v = Number(e.target.value);
+                                            setGuess(v);
+                                        }}
+                                        disabled={!canSubmit}
+                                        style={{
+                                            background: `linear-gradient(
+                                                to right,
+                                                var(--primary-color) ${fillPercent}%,
+                                                #ccc ${fillPercent}%
+                                            )`,
+                                        }}
+                                        aria-label="Gjett slider"
+                                    />
+                                    <span>{guess !== null ? guess : calculateMidpoint(minVal, maxVal)}</span>
+                                </div>
+                            )}
 
-							{useTextInput ? (
-								<div className="text-input">
-									<input
-										type="number"
-										min={minVal}
-										max={maxVal}
-										value={guess === null ? '' : guess}
-										onChange={(e) => handleTextInputChange(e, minVal, maxVal)}
-										disabled={!canSubmit}
-										placeholder={`Skriv et tall mellom ${minVal} og ${maxVal}`}
-									/>
-								</div>
-							) : (
-								<div className="slider-input">
-									<input
-										type="range"
-										min={minVal}
-										max={maxVal}
-										value={guess !== null ? guess : calculateMidpoint(minVal, maxVal)}
-										onChange={(e) => {
-											const v = Number(e.target.value);
-											setGuess(v);
-										}}
-										disabled={!canSubmit}
-										style={{
-											background: `linear-gradient(
-												to right,
-												var(--primary-color) ${fillPercent}%,
-												#ccc ${fillPercent}%
-											)`,
-										}}
-										aria-label="Guess Slider"
-									/>
-									<span>{guess !== null ? guess : calculateMidpoint(minVal, maxVal)}</span>
-								</div>
-							)}
+                            <button onClick={handleSubmitGuess} disabled={!canSubmit}>
+                                {canSubmit ? 'Send inn svar' : 'Svar sendt!'}
+                            </button>
 
-							<button onClick={handleSubmitGuess} disabled={!canSubmit}>
-								{canSubmit ? 'Send Inn Svar' : 'Svar sendt!'}
-							</button>
+                            {successMessage && <p className="success-message">{successMessage}</p>}
+                        </div>
+                    )}
 
-							{error && <p className="error-message">{error}</p>}
-							{successMessage && <p className="success-message">{successMessage}</p>}
-						</div>
-					)}
+                    {phase === 3 && (
+                        <div>
+                            <p>Regner ut poeng...</p>
+                            {currentGame.players && currentGame.players.find((p) => p.name === playerName)?.score > 0 && (
+                                <span className="updated-score">
+                                    <p>
+                                        +{' '}
+                                        <CountUp
+                                            end={
+                                                mockGame
+                                                    ? 10
+                                                    : currentGame.players.find((p) => p.name === playerName)?.score || 0
+                                            }
+                                            duration={2}
+                                        />
+                                    </p>
+                                </span>
+                            )}
+                        </div>
+                    )}
 
-					{phase === 3 && (
-						<div>
-							<p>Regner ut poeng...</p>
-							<span className={"updated-score"}>
-							<p>+ {mockGame ? 10 : currentGame.player.newScoreç}</p>
-							</span>
-						</div>
-					)}
+                    {phase === 4 && (
+                        <div>
+                            <p>Venter på neste spørsmål...</p>
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
 
-					{phase === 4 && (
-						<div>
-							<p>Venter på neste spørsmål...</p>
-						</div>
-					)}
-				</>
-			)}
-		</div>
-	);
 };
 
 export default PlayerGameView;

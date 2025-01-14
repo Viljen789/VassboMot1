@@ -1,0 +1,15 @@
+{
+  "GAME123": {
+    "title": "Sample Game",
+    "gameCode": "GAME123",
+    "players": [],
+    "questions": [],
+    "currentQuestionIndex": 0,
+    "status": "waiting",
+    "phase": 0,
+    "correctAnswer": null,
+    "roundStartedAt": null,
+    "answers": {},
+    "leaderboard": []
+  }
+}
