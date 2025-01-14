@@ -1,50 +1,53 @@
-// vassbo-mot-1-backend/server.js
+// vassbo-mot-1-backend/Server.js
 
 const express = require('express');
 const http = require('http');
-const {Server} = require('socket.io');
-const cors = require('cors');
-const bodyParser = require('body-parser');
+const socketIo = require('socket.io');
+const cors = require('cors'); // Import cors
+const gameRoutes = require('./routes/gameRoutes'); // Adjust path if necessary
 
 const app = express();
 const server = http.createServer(app);
-
-const PORT = process.env.PORT || 3001;
+const io = socketIo(server, {
+    cors: {
+        origin: 'http://localhost:3000', // Allow requests from this origin
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        credentials: true
+    }
+});
 
 // Middleware
-app.use(cors({
-	origin: '*', // Consider restricting this in production
+app.use(cors({ // Use cors middleware
+    origin: 'http://localhost:3000', // Frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
 }));
-app.use(bodyParser.json());
+app.use(express.json());
 
-// Setup Socket.io
-const io = new Server(server, {
-	cors: {
-		origin: 'http://localhost:3000', // Frontend URL
-		methods: ['GET', 'POST'],
-	},
-});
+// Make io accessible to routes
 app.set('io', io);
 
-// Import and use game routes
-const gameRoutes = require('./routes/gameRoutes');
+// Use the gameRoutes for /api
 app.use('/api', gameRoutes);
 
-// Socket.io Events
+// Socket.io connection handling
 io.on('connection', (socket) => {
-	console.log('A client connected');
+    console.log('A user connected');
 
-	socket.on('joinRoom', (gameCode) => {
-		socket.join(gameCode);
-		console.log(`Client joined room: ${gameCode}`);
-	});
+    socket.on('joinRoom', (gameCode) => {
+        socket.join(gameCode);
+        console.log(`Socket joined room: ${gameCode}`);
+    });
 
-	socket.on('disconnect', () => {
-		console.log('A client disconnected');
-	});
+    // Handle other socket events as needed
+
+    socket.on('disconnect', () => {
+        console.log('A user disconnected');
+    });
 });
 
 // Start the server
-server.listen(PORT, '0.0.0.0', () => {
-	console.log(`Server running on port ${PORT}`);
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });

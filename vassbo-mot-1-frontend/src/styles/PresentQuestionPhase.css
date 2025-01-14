@@ -1,4 +1,4 @@
-@import '../styles/variables.css';
+@import 'variables.css';
 
 .present-question-phase {
     padding: var(--spacing-lg);
@@ -24,7 +24,7 @@
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: 1rem;
     color: #ffffff;
-    background-color: var(--primary-color);
+    background-color: var(--secondary-color);
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;

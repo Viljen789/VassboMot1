@@ -1,6 +1,6 @@
 /* src/components/PlayerGameView.css */
 
-@import '../styles/variables.css';
+@import 'variables.css';
 
 /* Container Styling */
 .player-game-view {

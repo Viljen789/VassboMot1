@@ -1,4 +1,4 @@
-@import '../styles/variables.css';
+@import 'variables.css';
 
 .leaderboard {
     padding: var(--spacing-lg);
@@ -16,7 +16,7 @@
 }
 
 .leaderboard p {
-    color: var(--text-color);
+    /*color: var(--text-color);*/
     margin-bottom: var(--spacing-md);
 }
 
@@ -32,7 +32,7 @@
     padding: var(--spacing-xs) var(--spacing-sm);
     border-bottom: 1px solid var(--border-color);
     font-size: 1rem;
-    color: var(--text-color);
+    color: var(--secondary-color);
 }
 
 .leaderboard li:last-child {

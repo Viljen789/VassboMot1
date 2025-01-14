@@ -1,237 +1,346 @@
 // vassbo-mot-1-backend/controllers/gameController.js
 
-const Game = require('../models/game');
+const Game = require('../models/Game');
 const {generateGameCode} = require('../utils/gameUtils');
 
-const games = {};
+// Existing controller functions...
 
-const updatePhase = (req, res) => {
-	const {gameCode, phase} = req.body;
-	const game = games[gameCode];
+const createGame = async (req, res) => {
+    const {title} = req.body;
+    let gameCode = generateGameCode();
 
-	if (!game) {
-		return res.status(404).json({error: 'Spill ikke funnet.'});
-	}
+    console.log(`Creating game with title: ${title} and gameCode: ${gameCode}`);
 
-	game.phase = phase;
-	req.app.get('io').to(gameCode).emit('updatePhase', {phase}); // Broadcast phase
+    try {
+        let existingGame = await Game.loadGame(gameCode);
+        while (existingGame) {
+            gameCode = generateGameCode();
+            console.log(`Duplicate gameCode generated: ${gameCode}. Regenerating...`);
+            existingGame = await Game.loadGame(gameCode);
+        }
 
-	res.json({message: `Phase set to ${phase}.`});
-};
-const createGame = (req, res) => {
-	const {title} = req.body;
-	console.log('Received create-game request with title:', title);
-	let gameCode = generateGameCode();
+        const newGame = await Game.createGame(title, gameCode);
 
-	// Ensure the code is unique
-	while (games[gameCode]) {
-		console.log('Generated gameCode already exists:', gameCode);
-		gameCode = generateGameCode();
-	}
+        console.log(`Game created successfully with gameCode: ${gameCode}`);
 
-	const newGame = new Game(title, gameCode);
-	games[gameCode] = newGame;
+        res.json(newGame);
 
-	console.log('Game created with gameCode:', gameCode);
-
-	res.json(newGame);
-
-	// Emit to all connected clients
-	req.app.get('io').emit('updateGame', newGame);
+        req.app.get('io').to(gameCode).emit('updateGame', newGame);
+    } catch (err) {
+        console.error('Error creating game:', err);
+        res.status(500).json({error: 'An error occurred while creating the game.'});
+    }
 };
 
-const joinGame = (req, res) => {
-	const {gameCode, playerName} = req.body;
+const joinGame = async (req, res) => {
+    const {gameCode, playerName} = req.body;
 
-	console.log(`JoinGame request: gameCode=${gameCode}, playerName=${playerName}`);
+    console.log(`Attempting to join game: ${gameCode} with playerName: ${playerName}`);
 
-	const game = games[gameCode];
-	if (!game) {
-		console.error(`Game not found for gameCode: ${gameCode}`);
-		return res.status(404).json({error: 'Game not found.'});
-	}
+    if (!gameCode || !playerName) {
+        console.error('Missing gameCode or playerName in request body.');
+        return res.status(400).json({error: 'Game code and player name are required.'});
+    }
 
-	const isDuplicate = game.players.some(player => player.name.toLowerCase() === playerName.toLowerCase());
-	if (isDuplicate) {
-		console.error(`Duplicate player detected: ${playerName}`);
-		return res.status(400).json({error: 'Player name already taken.'});
-	}
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            console.error(`Game not found: ${gameCode}`);
+            return res.status(404).json({error: 'Game not found.'});
+        }
 
-	try {
-		game.addPlayer(playerName);
-		console.log(`Player added: ${playerName}. Players now:`, game.players);
+        const isDuplicate = game.players.some(player => player.name.toLowerCase() === playerName.toLowerCase());
+        if (isDuplicate) {
+            console.error(`Player name already taken: ${playerName}`);
+            return res.status(400).json({error: 'Player name already taken.'});
+        }
 
-		// Emit the updated game object to all connected clients
-		req.app.get('io').emit('updateGame', game);
+        game.addPlayer(playerName);
+        await Game.saveGame(gameCode, game);
 
-		res.json({player: {name: playerName, score: 0}});
-	} catch (error) {
-		console.error('Error adding player:', error);
-		res.status(500).json({error: 'An error occurred while adding the player.'});
-	}
+        console.log(`Player ${playerName} added successfully to game ${gameCode}`);
+
+        req.app.get('io').to(gameCode).emit('updateGame', game);
+
+        res.json({player: {name: playerName, score: 0}});
+    } catch (error) {
+        console.error('Error adding player:', error);
+        res.status(500).json({error: 'An error occurred while adding the player.'});
+    }
 };
 
-const addQuestion = (req, res) => {
-	const {gameCode, question} = req.body;
-	console.log('Received add-question request for gameCode:', gameCode, 'Question:', question);
+const addQuestion = async (req, res) => {
+    const {gameCode, question} = req.body;
 
-	const game = games[gameCode];
-	if (!game) {
-		console.log('Game not found:', gameCode);
-		return res.status(404).json({error: 'Spill ikke funnet.'});
-	}
+    console.log(`Adding question to game: ${gameCode}. Question: ${question.text}`);
 
-	game.addQuestion(question);
-	console.log('Question added to game:', gameCode, 'Question:', question);
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            console.error(`Game not found: ${gameCode}`);
+            return res.status(404).json({error: 'Game not found.'});
+        }
 
-	res.json({message: 'Spørsmål lagt til.', questions: game.questions});
+        game.addQuestion(question);
+        await Game.saveGame(gameCode, game);
 
-	// Emit til alle tilkoblede klienter
-	req.app.get('io').emit('updateGame', game);
+        console.log(`Question added successfully to game: ${gameCode}`);
+
+        res.json({message: 'Question added.', questions: game.questions});
+
+        req.app.get('io').to(gameCode).emit('updateGame', game);
+    } catch (error) {
+        console.error('Error adding question:', error);
+        res.status(500).json({error: 'An error occurred while adding the question.'});
+    }
 };
 
-const startGame = (req, res) => {
-	const {gameCode} = req.body;
-	const io = req.app.get('io'); // Hent io fra Express app
+const startGame = async (req, res) => {
+    const {gameCode} = req.body;
+    const io = req.app.get('io');
 
-	console.log('Starting game for gameCode:', gameCode);
-	console.log('Available games:', games);
+    console.log(`Starting game: ${gameCode}`);
 
-	const game = games[gameCode];
-	if (!game) {
-		console.error('Game not found:', gameCode);
-		return res.status(404).json({error: 'Spill ikke funnet.'});
-	}
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            console.error(`Game not found: ${gameCode}`);
+            return res.status(404).json({error: 'Game not found.'});
+        }
 
-	try {
-		console.log('Starting game logic for gameCode:', gameCode);
-		game.startGame(io); // Send io til modellen
-		res.json({message: 'Spill startet.', game});
-	} catch (err) {
-		console.error('Error starting game:', err.message);
-		res.status(400).json({error: err.message});
-	}
+        game.startGame(io);
+        await Game.saveGame(gameCode, game);
+
+        console.log(`Game started: ${gameCode}`);
+
+        res.json({message: 'Game started.', game});
+
+        req.app.get('io').to(gameCode).emit('updateGame', game);
+    } catch (err) {
+        console.error('Error starting game:', err.message);
+        res.status(400).json({error: err.message});
+    }
 };
 
+const openGuessing = async (req, res) => {
+    const {gameCode} = req.body;
+    const io = req.app.get('io');
 
-const validateGameCode = (req, res) => {
-	const {gameCode} = req.params;
-	console.log('Received validateGameCode request for:', gameCode);
+    console.log(`Opening guessing phase for game: ${gameCode}`);
 
-	const game = games[gameCode];
-	if (game) {
-		res.json({isValid: true});
-	} else {
-		res.json({isValid: false});
-	}
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            console.error(`Game not found: ${gameCode}`);
+            return res.status(404).json({error: 'Game not found.'});
+        }
+
+        game.startRound(io);
+        await Game.saveGame(gameCode, game);
+
+        console.log(`Guessing phase started for game: ${gameCode}`);
+
+        res.json({message: 'Guessing phase started.', game});
+
+        io.to(gameCode).emit('updateGame', game);
+    } catch (err) {
+        console.error('Error starting round:', err.message);
+        res.status(400).json({error: err.message});
+    }
 };
 
-const startRound = (req, res) => {
-	const {gameCode} = req.body;
-	console.log('Received start-round request for gameCode:', gameCode);
+const setCorrectAnswer = async (req, res) => {
+    const {gameCode, correctAnswer} = req.body;
+    const io = req.app.get('io');
 
-	const game = games[gameCode];
-	if (!game) {
-		console.log('Game not found:', gameCode);
-		return res.status(404).json({error: 'Spill ikke funnet.'});
-	}
+    console.log(`Setting correct answer for game: ${gameCode}. Correct Answer: ${correctAnswer}`);
 
-	try {
-		game.startRound(req.app.get('io')); // Sender `io` korrekt
-	} catch (err) {
-		console.log('Error starting round:', err.message);
-		return res.status(400).json({error: err.message});
-	}
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            console.error(`Game not found: ${gameCode}`);
+            return res.status(404).json({error: 'Game not found.'});
+        }
 
-	console.log('Round started for gameCode:', gameCode);
+        game.setCorrectAnswer(correctAnswer, io);
+        await Game.saveGame(gameCode, game);
 
-	res.json({message: 'Runde startet.', game});
+        console.log(`Correct answer set and scores calculated for game: ${gameCode}`);
 
-	// Emit til alle tilkoblede klienter
-	req.app.get('io').emit('updateGame', game);
+        res.json({message: 'Correct answer set and scores calculated.', game});
+
+        req.app.get('io').to(gameCode).emit('updateGame', game);
+    } catch (err) {
+        console.error('Error setting correct answer:', err.message);
+        res.status(400).json({error: err.message});
+    }
 };
 
-const setCorrectAnswer = (req, res) => {
-	const {gameCode, correctAnswer} = req.body;
-	console.log('Received set-correct-answer request for gameCode:', gameCode, 'Correct Answer:', correctAnswer);
+const submitGuess = async (req, res) => {
+    const {gameCode, playerName, guess} = req.body;
 
-	const game = games[gameCode];
-	if (!game) {
-		console.log('Game not found:', gameCode);
-		return res.status(404).json({error: 'Spill ikke funnet.'});
-	}
+    console.log(`Player ${playerName} submitting guess: ${guess} for game: ${gameCode}`);
 
-	try {
-		game.setCorrectAnswer(correctAnswer, req.app.get('io'));
-	} catch (err) {
-		console.log('Error setting correct answer:', err.message);
-		return res.status(400).json({error: err.message});
-	}
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            console.error(`Game not found: ${gameCode}`);
+            return res.status(404).json({error: 'Game not found.'});
+        }
 
-	res.json({message: 'Riktig svar satt og poeng beregnet.', game});
+        game.submitGuess(playerName, guess);
+        await Game.saveGame(gameCode, game);
 
-	// Emit til alle tilkoblede klienter
-	req.app.get('io').emit('updateGame', game);
+        console.log(`Guess submitted successfully by ${playerName} for game ${gameCode}`);
+
+        res.json({message: 'Guess received.'});
+
+        req.app.get('io').to(gameCode).emit('updateGame', game);
+    } catch (err) {
+        console.error('Error submitting guess:', err.message);
+        res.status(400).json({error: err.message});
+    }
 };
 
-const submitGuess = (req, res) => {
-	const {gameCode, playerName, guess} = req.body;
-	console.log('Received submit-guess request:', {gameCode, playerName, guess});
+const updatePhase = async (req, res) => {
+    const {gameCode, phase} = req.body;
+    const io = req.app.get('io');
 
-	const game = games[gameCode];
-	if (!game) {
-		console.log('Game not found:', gameCode);
-		return res.status(404).json({error: 'Spill ikke funnet.'});
-	}
+    console.log(`Updating phase to ${phase} for game: ${gameCode}`);
 
-	try {
-		game.submitGuess(playerName, guess, req.app.get('io'));
-		console.log(`Player '${playerName}' submitted guess: ${guess} for game '${gameCode}'.`);
-	} catch (err) {
-		console.log('Error submitting guess:', err.message);
-		return res.status(400).json({error: err.message});
-	}
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            console.error(`Game not found: ${gameCode}`);
+            return res.status(404).json({error: 'Game not found.'});
+        }
 
-	res.json({message: 'Gjetning mottatt.'});
+        game.setPhase(phase);
+        await Game.saveGame(gameCode, game);
 
-	// Emit to all connected clients
-	req.app.get('io').emit('updateGame', game);
+        console.log(`Phase updated to ${phase} for game: ${gameCode}`);
+
+        req.app.get('io').to(gameCode).emit('updatePhase', {phase, gameCode});
+
+        res.json({message: `Phase set to ${phase}.`});
+    } catch (error) {
+        console.error('Error updating phase:', error);
+        res.status(500).json({error: 'Error updating phase.'});
+    }
 };
-const updateQuestion = (req, res) => {
-	const {gameCode, index} = req.params; // Get gameCode and question index from URL parameters
-	const {text, range} = req.body; // Get updated question data
 
-	console.log(`Received update-question request for gameCode: ${gameCode} and index: ${index}`);
+const setNextPhase = async (req, res) => {
+    const {gameCode} = req.body;
+    const io = req.app.get('io');
 
-	const game = games[gameCode];
-	if (!game) {
-		console.log('Game not found:', gameCode);
-		return res.status(404).json({error: 'Spill ikke funnet.'});
-	}
+    console.log(`Setting next phase for game: ${gameCode}`);
 
-	try {
-		// Use the Game class's method to handle the validation and question update
-		game.updateQuestion(index, {text, range});
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            console.error(`Game not found: ${gameCode}`);
+            return res.status(404).json({error: 'Game not found.'});
+        }
 
-		console.log(`Question at index ${index} in gameCode ${gameCode} updated successfully.`);
-		res.json({message: 'Spørsmålet ble oppdatert.', question: game.questions[index]});
+        game.setNextPhase();
+        await Game.saveGame(gameCode, game);
 
-		// Emit change to all connected clients
-		req.app.get('io').emit('updateGame', game);
-	} catch (err) {
-		console.log('Error updating question:', err.message);
-		res.status(400).json({error: err.message});
-	}
+        console.log(`Next phase set for game: ${gameCode}`);
+
+        req.app.get('io').to(gameCode).emit('updateGame', game);
+
+        res.json({message: 'Phase updated.', game});
+    } catch (err) {
+        console.error('Error setting next phase:', err.message);
+        res.status(400).json({error: err.message});
+    }
 };
+
+const updateQuestion = async (req, res) => {
+    const {gameCode, index} = req.params;
+    const {text, rangeMin, rangeMax} = req.body;
+    const io = req.app.get('io');
+
+    console.log(`Updating question at index ${index} for game: ${gameCode}`);
+
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            console.error(`Game not found: ${gameCode}`);
+            return res.status(404).json({error: 'Game not found.'});
+        }
+
+        const questionIndex = Number(index);
+        if (isNaN(questionIndex) || questionIndex < 0 || questionIndex >= game.questions.length) {
+            console.error(`Invalid question index: ${index}`);
+            return res.status(400).json({error: 'Invalid question index.'});
+        }
+
+        const min = Number(rangeMin);
+        const max = Number(rangeMax);
+        if (isNaN(min) || isNaN(max) || min >= max) {
+            console.error(`Invalid range values: min=${rangeMin}, max=${rangeMax}`);
+            return res.status(400).json({error: 'Invalid range values.'});
+        }
+
+        game.questions[questionIndex].text = text;
+        game.questions[questionIndex].rangeMin = min;
+        game.questions[questionIndex].rangeMax = max;
+
+        await Game.saveGame(gameCode, game);
+
+        console.log(`Question at index ${index} updated successfully for game: ${gameCode}`);
+
+        res.json({message: 'Question updated.', question: game.questions[questionIndex]});
+
+        req.app.get('io').to(gameCode).emit('updateGame', game);
+    } catch (error) {
+        console.error('Error updating question:', error);
+        res.status(500).json({error: 'Error updating question.'});
+    }
+};
+
+// **New Controller Function**
+const getGame = async (req, res) => {
+    const {gameCode} = req.params;
+
+    try {
+        const game = await Game.loadGame(gameCode);
+        if (!game) {
+            return res.status(404).json({error: 'Game not found.'});
+        }
+        res.json(game);
+    } catch (err) {
+        console.error('Error fetching game:', err);
+        res.status(500).json({error: 'An error occurred while fetching the game.'});
+    }
+};
+
+// **New Controller Function**
+const validateGameCode = async (req, res) => {
+    const {gameCode} = req.params;
+
+    try {
+        const game = await Game.loadGame(gameCode);
+        res.json({isValid: !!game});
+    } catch (err) {
+        console.error('Error validating game code:', err);
+        res.status(500).json({error: 'Error validating game code.'});
+    }
+};
+
+// Export all controller functions
 module.exports = {
-	games,
-	createGame,
-	joinGame,
-	addQuestion,
-	startGame,
-	validateGameCode,
-	startRound,
-	setCorrectAnswer,
-	submitGuess,
-	updateQuestion
+    createGame,
+    joinGame,
+    addQuestion,
+    startGame,
+    openGuessing,
+    setCorrectAnswer,
+    submitGuess,
+    updatePhase,
+    setNextPhase,
+    updateQuestion,
+    validateGameCode, // Now properly defined
+    getGame, // Ensure getGame is exported
 };
