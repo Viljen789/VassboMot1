@@ -20,7 +20,7 @@ function App() {
                 <Route path="/register" element={<Register/>}/>
                 <Route path="/admin/flow/:gameCode" element={<AdminFlow/>}/>
                 <Route path="/game/:gameCode" element={<PlayerGameView/>}/>
-                <Route path="/test/player-view-test" element={<PlayerViewTest/>}/>
+                <Route path="/player-view-test" element={<PlayerViewTest/>}/>
                 <Route path="/admin-test" element={<AdminFlowTest/>}/>
 
             </Routes>

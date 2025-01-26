@@ -1,4 +1,417 @@
 {
+  "198030": {
+    "title": "A",
+    "gameCode": "198030",
+    "players": [
+      {
+        "name": "A",
+        "score": 1353
+      },
+      {
+        "name": "B",
+        "score": 1595
+      }
+    ],
+    "questions": [
+      {
+        "text": "Spm0",
+        "rangeMin": 0,
+        "rangeMax": 10
+      },
+      {
+        "text": "spm0",
+        "rangeMin": 0,
+        "rangeMax": 123
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 3,
+    "correctAnswer": 123,
+    "roundStartedAt": 1737899147118,
+    "answers": {
+      "B": 8,
+      "A": 8
+    },
+    "leaderboard": []
+  },
+  "249772": {
+    "title": "Test",
+    "gameCode": "249772",
+    "players": [
+      {
+        "name": "B",
+        "score": 0
+      },
+      {
+        "name": "A",
+        "score": 0
+      }
+    ],
+    "questions": [
+      {
+        "text": "Test1",
+        "rangeMin": 0,
+        "rangeMax": 10
+      },
+      {
+        "text": "T2",
+        "rangeMin": 0,
+        "rangeMax": 100
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 2,
+    "correctAnswer": null,
+    "roundStartedAt": 1737814893180,
+    "answers": {
+      "A": 3,
+      "B": 4
+    },
+    "leaderboard": []
+  },
+  "314508": {
+    "title": "A",
+    "gameCode": "314508",
+    "players": [
+      {
+        "name": "A",
+        "score": 1000
+      },
+      {
+        "name": "B",
+        "score": 6
+      }
+    ],
+    "questions": [
+      {
+        "text": "p",
+        "rangeMin": 0,
+        "rangeMax": 789
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 3,
+    "correctAnswer": 638,
+    "roundStartedAt": 1737821861503,
+    "answers": {
+      "B": 137,
+      "A": 638
+    },
+    "leaderboard": []
+  },
+  "470427": {
+    "title": "A",
+    "gameCode": "470427",
+    "players": [
+      {
+        "name": "A",
+        "score": 0
+      },
+      {
+        "name": "B",
+        "score": 0
+      }
+    ],
+    "questions": [
+      {
+        "text": "spm0",
+        "rangeMin": 0,
+        "rangeMax": 10
+      },
+      {
+        "text": "spm2",
+        "rangeMin": 0,
+        "rangeMax": 20
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 2,
+    "correctAnswer": null,
+    "roundStartedAt": 1737820248022,
+    "answers": {
+      "B": 5,
+      "A": 5
+    },
+    "leaderboard": []
+  },
+  "518570": {
+    "title": "A",
+    "gameCode": "518570",
+    "players": [
+      {
+        "name": "A",
+        "score": 1040
+      },
+      {
+        "name": "B",
+        "score": 630
+      }
+    ],
+    "questions": [
+      {
+        "text": "1",
+        "rangeMin": 0,
+        "rangeMax": 20
+      },
+      {
+        "text": "2",
+        "rangeMin": 10,
+        "rangeMax": 320
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 4,
+    "correctAnswer": 20,
+    "roundStartedAt": 1737915370646,
+    "answers": {
+      "A": 10,
+      "B": 10
+    },
+    "leaderboard": []
+  },
+  "554304": {
+    "title": "A",
+    "gameCode": "554304",
+    "players": [
+      {
+        "name": "A",
+        "score": 0
+      },
+      {
+        "name": "B",
+        "score": 0
+      }
+    ],
+    "questions": [
+      {
+        "text": "A",
+        "rangeMin": 11,
+        "rangeMax": 1000
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 3,
+    "correctAnswer": 500000,
+    "roundStartedAt": 1737812452366,
+    "answers": {
+      "A": 279,
+      "B": 809
+    },
+    "leaderboard": []
+  },
+  "582806": {
+    "title": "A",
+    "gameCode": "582806",
+    "players": [
+      {
+        "name": "A",
+        "score": 44
+      },
+      {
+        "name": "V",
+        "score": 135
+      }
+    ],
+    "questions": [
+      {
+        "text": "spm0",
+        "rangeMin": 0,
+        "rangeMax": 10
+      },
+      {
+        "text": "spm1",
+        "rangeMin": 0,
+        "rangeMax": 1123
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 3,
+    "correctAnswer": 768,
+    "roundStartedAt": 1737819862663,
+    "answers": {},
+    "leaderboard": []
+  },
+  "662153": {
+    "title": "A",
+    "gameCode": "662153",
+    "players": [
+      {
+        "name": "A",
+        "score": 1432
+      },
+      {
+        "name": "B",
+        "score": 2546
+      }
+    ],
+    "questions": [
+      {
+        "text": "1",
+        "rangeMin": 0,
+        "rangeMax": 10
+      },
+      {
+        "text": "2",
+        "rangeMin": 20,
+        "rangeMax": 30
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 2,
+    "correctAnswer": 2,
+    "roundStartedAt": 1737907565882,
+    "answers": {},
+    "leaderboard": []
+  },
+  "675141": {
+    "title": "A",
+    "gameCode": "675141",
+    "players": [
+      {
+        "name": "A",
+        "score": 0
+      },
+      {
+        "name": "B",
+        "score": 0
+      }
+    ],
+    "questions": [
+      {
+        "text": "Test",
+        "rangeMin": 0,
+        "rangeMax": 11
+      },
+      {
+        "text": "2",
+        "rangeMin": 0,
+        "rangeMax": 120
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 2,
+    "correctAnswer": null,
+    "roundStartedAt": 1737815563864,
+    "answers": {
+      "B": 5,
+      "A": 2
+    },
+    "leaderboard": []
+  },
+  "760967": {
+    "title": "A",
+    "gameCode": "760967",
+    "players": [
+      {
+        "name": "A",
+        "score": 421
+      },
+      {
+        "name": "B",
+        "score": 421
+      }
+    ],
+    "questions": [
+      {
+        "text": "1",
+        "rangeMin": 1,
+        "rangeMax": 20
+      },
+      {
+        "text": "2",
+        "rangeMin": 20,
+        "rangeMax": 40
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 3,
+    "correctAnswer": 5,
+    "roundStartedAt": 1737913252353,
+    "answers": {
+      "B": 10,
+      "A": 10
+    },
+    "leaderboard": []
+  },
+  "811245": {
+    "title": "A",
+    "gameCode": "811245",
+    "players": [
+      {
+        "name": "B",
+        "score": 2034
+      },
+      {
+        "name": "A",
+        "score": 3528
+      }
+    ],
+    "questions": [
+      {
+        "text": "1",
+        "rangeMin": 0,
+        "rangeMax": 10
+      },
+      {
+        "text": "2",
+        "rangeMin": 20,
+        "rangeMax": 30
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 3,
+    "correctAnswer": 5,
+    "roundStartedAt": 1737909277743,
+    "answers": {},
+    "leaderboard": []
+  },
+  "871955": {
+    "title": "A",
+    "gameCode": "871955",
+    "players": [
+      {
+        "name": "A",
+        "score": 7757
+      },
+      {
+        "name": "B",
+        "score": 4579
+      }
+    ],
+    "questions": [
+      {
+        "text": "spm1",
+        "rangeMin": 0,
+        "rangeMax": 10
+      },
+      {
+        "text": "spm2",
+        "rangeMin": 10,
+        "rangeMax": 20
+      }
+    ],
+    "currentQuestionIndex": 0,
+    "status": "started",
+    "phase": 3,
+    "correctAnswer": 4,
+    "roundStartedAt": 1737905106996,
+    "answers": {
+      "A": 5,
+      "B": 8
+    },
+    "leaderboard": []
+  },
   "GAME123": {
     "title": "Sample Game",
     "gameCode": "GAME123",
